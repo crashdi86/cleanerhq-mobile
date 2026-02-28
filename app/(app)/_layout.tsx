@@ -30,6 +30,13 @@ export default function AppLayout() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="jobs/[id]" />
         <Stack.Screen
+          name="jobs/new"
+          options={{
+            presentation: "fullScreenModal",
+            animation: "slide_from_bottom",
+          }}
+        />
+        <Stack.Screen
           name="clock-in"
           options={{
             presentation: "fullScreenModal",

@@ -15,10 +15,17 @@ export const ENDPOINTS = {
   JOBS: "/jobs",
   JOB_DETAIL: (id: string) => `/jobs/${id}` as const,
   JOB_STATUS: (id: string) => `/jobs/${id}/status` as const,
+  JOB_START: (id: string) => `/jobs/${id}/start` as const,
+  JOB_COMPLETE: (id: string) => `/jobs/${id}/complete` as const,
 
   // Jobs — schedule & unassigned
   MY_SCHEDULE: "/jobs/my-schedule",
   JOBS_UNASSIGNED: "/jobs/unassigned",
+
+  // CRM & Team
+  ACCOUNTS: "/accounts",
+  ACCOUNT_DETAIL: (id: string) => `/accounts/${id}` as const,
+  TEAM: "/team",
 
   // Time tracking
   CLOCK_IN: "/time/clock-in",

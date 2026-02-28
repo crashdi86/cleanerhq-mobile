@@ -7,7 +7,7 @@ import { configureAuth } from "@/lib/auth/configure-auth";
 import { apiClient } from "@/lib/api/client";
 import { ENDPOINTS } from "@/constants/api";
 import { BiometricUtils } from "@/hooks/useBiometric";
-import type { MeResponse } from "@/lib/api/types";
+import type { ProfileResponse } from "@/lib/api/types";
 
 export function SessionProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
@@ -67,20 +67,20 @@ async function restoreSession(): Promise<void> {
     }
 
     // Validate token by fetching user profile
-    const me = await apiClient.get<MeResponse>(ENDPOINTS.ME);
-    const primaryWorkspace = me.workspaces[0];
+    const profile = await apiClient.get<ProfileResponse>(ENDPOINTS.PROFILE);
 
-    if (primaryWorkspace) {
+    if (profile.workspace) {
       setAuthenticated(
         {
-          id: me.id,
-          email: me.email,
-          fullName: me.full_name,
-          role: primaryWorkspace.role,
+          id: profile.id,
+          email: profile.email,
+          fullName: profile.full_name,
+          role: profile.role,
+          avatarUrl: profile.avatar_url ?? undefined,
         },
         {
-          id: primaryWorkspace.id,
-          name: primaryWorkspace.name,
+          id: profile.workspace.id,
+          name: profile.workspace.name,
         }
       );
     }
