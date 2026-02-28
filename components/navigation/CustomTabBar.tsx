@@ -58,7 +58,8 @@ export function CustomTabBar({
       <View style={styles.tabRow}>
         {state.routes.map((route, index) => {
           const isFocused = state.index === index;
-          const routeName = route.name;
+          // Expo Router uses "home/index" format; strip "/index" for label/icon lookup
+          const routeName = route.name.replace(/\/index$/, "");
 
           // Role-based: OWNER sees "Jobs" (briefcase) for the route tab
           const icon =

@@ -1,17 +1,22 @@
 import { useApiQuery } from "../hooks";
+import { useCachedQuery } from "@/hooks/useCachedQuery";
 import { apiClient } from "../client";
 import { ENDPOINTS } from "@/constants/api";
 import type { MyScheduleResponse, DashboardSummaryResponse } from "../types";
 
-/** Staff: fetch my schedule for a given date */
+/** Staff: fetch my schedule for a given date (with offline cache) */
 export function useMySchedule(date: string) {
-  return useApiQuery<MyScheduleResponse>(
+  return useCachedQuery<MyScheduleResponse>(
     ["my-schedule", date],
     () =>
       apiClient.get<MyScheduleResponse>(
         `${ENDPOINTS.MY_SCHEDULE}?reference_date=${date}`
       ),
-    { staleTime: 2 * 60 * 1000 }
+    {
+      staleTime: 2 * 60 * 1000,
+      entityType: "schedule",
+      cacheKey: `schedule:${date}`,
+    }
   );
 }
 

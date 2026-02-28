@@ -4,6 +4,7 @@ import { View, Text, Pressable, ScrollView } from "@/tw";
 import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
 import {
   faFileInvoiceDollar,
+  faPlus,
   faRoute,
   faUsers,
 } from "@fortawesome/free-solid-svg-icons";
@@ -24,6 +25,13 @@ const QUICK_ACTIONS: QuickAction[] = [
     iconColor: "#FFFFFF",
     variant: "primary",
     route: "/(app)/quotes/new",
+  },
+  {
+    label: "Create Job",
+    icon: faPlus,
+    iconColor: "#10B981",
+    variant: "secondary",
+    route: "/(app)/jobs/new",
   },
   {
     label: "Optimize Route",
