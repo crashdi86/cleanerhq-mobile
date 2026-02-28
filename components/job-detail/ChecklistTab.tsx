@@ -1,114 +1,272 @@
-import React, { useState } from "react";
-import { StyleSheet } from "react-native";
+import React, { useState, useMemo, useCallback } from "react";
+import { ActivityIndicator } from "react-native";
 import { View, Text, Pressable } from "@/tw";
 import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
-import { faCheck, faChevronDown, faChevronUp } from "@fortawesome/free-solid-svg-icons";
-import type { JobChecklist, ChecklistItem } from "@/lib/api/types";
+import {
+  faClipboardList,
+  faCamera,
+} from "@fortawesome/free-solid-svg-icons";
+import { useRouter } from "expo-router";
+import {
+  useChecklist,
+  useToggleChecklistItem,
+} from "@/lib/api/hooks/useChecklist";
+import { ApiError } from "@/lib/api/client";
+import { showToast } from "@/store/toast-store";
+import { ProgressBar } from "@/components/checklist/ProgressBar";
+import { ChecklistSection } from "@/components/checklist/ChecklistSection";
+import { PhotoRequiredPrompt } from "@/components/checklist/PhotoRequiredPrompt";
+import type { JobStatus, ChecklistItem } from "@/lib/api/types";
 
 interface ChecklistTabProps {
-  checklist: JobChecklist;
+  jobId: string;
+  jobStatus: JobStatus;
 }
 
-const INITIAL_VISIBLE_COUNT = 5;
-
-function getProgressColor(percentage: number): string {
-  if (percentage === 100) return "#10B981";
-  if (percentage >= 50) return "#F59E0B";
-  return "#EF4444";
+/** Gets the section/room name — API may use "room" or "category" */
+function getSectionName(item: ChecklistItem): string {
+  return item.room ?? item.category ?? "General";
 }
 
-interface ChecklistItemRowProps {
-  item: ChecklistItem;
+/** Groups items by room/category, placing items without one under "General" */
+function groupByRoom(
+  items: ChecklistItem[]
+): Array<{ room: string; items: ChecklistItem[] }> {
+  const map = new Map<string, ChecklistItem[]>();
+
+  for (const item of items) {
+    const room = getSectionName(item);
+    const existing = map.get(room);
+    if (existing) {
+      existing.push(item);
+    } else {
+      map.set(room, [item]);
+    }
+  }
+
+  return Array.from(map.entries()).map(([room, roomItems]) => ({
+    room,
+    items: roomItems,
+  }));
 }
 
-function ChecklistItemRow({ item }: ChecklistItemRowProps) {
-  return (
-    <View className="flex-row items-center py-3 border-b border-gray-100">
-      {/* Checkbox circle */}
-      {item.completed ? (
-        <View className="w-6 h-6 rounded-full items-center justify-center mr-3" style={styles.completedCircle}>
-          <FontAwesomeIcon icon={faCheck} size={12} color="#FFFFFF" />
-        </View>
-      ) : (
-        <View className="w-6 h-6 rounded-full border-2 border-gray-300 mr-3" />
-      )}
+/** Safely compute percentage from checklist data — API may use "progress" or "percentage" */
+function getPercentage(checklist: { percentage?: number; progress?: number; completed: number; total: number }): number {
+  if (typeof checklist.percentage === "number") return checklist.percentage;
+  if (typeof checklist.progress === "number") return checklist.progress;
+  if (checklist.total === 0) return 0;
+  return Math.round((checklist.completed / checklist.total) * 100);
+}
 
-      {/* Label */}
-      <Text
-        className={`text-sm flex-1 ${
-          item.completed ? "text-gray-400 line-through" : "text-gray-900"
-        }`}
-      >
-        {item.label}
-      </Text>
+export function ChecklistTab({ jobId, jobStatus }: ChecklistTabProps) {
+  const router = useRouter();
+  const { data: checklist, isLoading, isError } = useChecklist(jobId);
+  const toggleMutation = useToggleChecklistItem();
 
-      {/* Required badge */}
-      {item.required && !item.completed ? (
-        <View className="bg-red-50 rounded-md px-2 py-0.5 ml-2">
-          <Text className="text-[10px] font-semibold text-red-500">Required</Text>
-        </View>
-      ) : null}
-    </View>
+  // Photo-required prompt state
+  const [photoPromptItemId, setPhotoPromptItemId] = useState<string | null>(
+    null
   );
-}
 
-export function ChecklistTab({ checklist }: ChecklistTabProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const { items, completed, total, percentage } = checklist;
+  // Disable interactions when job is not in_progress
+  const isDisabled = jobStatus !== "in_progress";
 
-  const hasOverflow = items.length > INITIAL_VISIBLE_COUNT;
-  const visibleItems =
-    isExpanded || !hasOverflow
-      ? items
-      : items.slice(0, INITIAL_VISIBLE_COUNT);
-  const remainingCount = items.length - INITIAL_VISIBLE_COUNT;
-  const progressColor = getProgressColor(percentage);
+  // Group items by room
+  const sections = useMemo(() => {
+    if (!checklist) return [];
+    return groupByRoom(checklist.items);
+  }, [checklist]);
+
+  // Compute required item stats
+  const requiredStats = useMemo(() => {
+    if (!checklist) return { total: 0, completed: 0, incompleteIds: new Set<string>() };
+
+    const requiredItems = checklist.items.filter((i) => i.required);
+    const completedRequired = requiredItems.filter((i) => i.completed);
+    const incompleteRequired = requiredItems.filter((i) => !i.completed);
+
+    return {
+      total: requiredItems.length,
+      completed: completedRequired.length,
+      incompleteIds: new Set(incompleteRequired.map((i) => i.id)),
+    };
+  }, [checklist]);
+
+  // Handle toggle
+  const handleToggle = useCallback(
+    (itemId: string, completed: boolean) => {
+      // Check if this is a photo-required item being checked without photos
+      if (completed && checklist) {
+        const item = checklist.items.find((i) => i.id === itemId);
+        if (item?.requires_photo && (!item.photos || item.photos.length === 0)) {
+          setPhotoPromptItemId(itemId);
+          return;
+        }
+      }
+
+      toggleMutation.mutate(
+        { jobId, itemId, completed },
+        {
+          onError: (err) => {
+            if (
+              err instanceof ApiError &&
+              err.code === "PHOTO_REQUIRED_FOR_ITEM"
+            ) {
+              setPhotoPromptItemId(itemId);
+            } else if (
+              err instanceof ApiError &&
+              err.code === "JOB_NOT_ASSIGNED"
+            ) {
+              showToast("error", "You are not assigned to this job");
+            } else {
+              showToast("error", "Failed to update checklist");
+            }
+          },
+        }
+      );
+    },
+    [jobId, checklist, toggleMutation]
+  );
+
+  // Handle camera press from item row
+  const handleCameraPress = useCallback(
+    (itemId: string) => {
+      router.push({
+        pathname: "/(app)/camera",
+        params: { jobId, checklistItemId: itemId },
+      });
+    },
+    [router, jobId]
+  );
+
+  // Handle photo thumbnail press
+  const handlePhotoPress = useCallback(
+    (_itemId: string) => {
+      // Could open lightbox for this item's photos — for now navigate to Photos tab
+      showToast("info", "View photo in Photos tab");
+    },
+    []
+  );
+
+  // Photo prompt handlers
+  const handleTakePhotoFromPrompt = useCallback(() => {
+    if (photoPromptItemId) {
+      router.push({
+        pathname: "/(app)/camera",
+        params: { jobId, checklistItemId: photoPromptItemId },
+      });
+    }
+    setPhotoPromptItemId(null);
+  }, [photoPromptItemId, router, jobId]);
+
+  const handleCancelPrompt = useCallback(() => {
+    setPhotoPromptItemId(null);
+  }, []);
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <View className="mx-4 mt-4 bg-white rounded-2xl py-12 items-center justify-center">
+        <ActivityIndicator size="large" color="#2A5B4F" />
+        <Text className="text-sm text-gray-400 mt-3">
+          Loading checklist...
+        </Text>
+      </View>
+    );
+  }
+
+  // Error state
+  if (isError || !checklist) {
+    return (
+      <View className="mx-4 mt-4 bg-white rounded-2xl py-12 items-center justify-center">
+        <Text className="text-sm text-gray-400">
+          Failed to load checklist
+        </Text>
+      </View>
+    );
+  }
+
+  // Empty state
+  if (checklist.items.length === 0) {
+    return (
+      <View className="mx-4 mt-4 bg-white rounded-2xl py-12 items-center justify-center">
+        <View className="w-16 h-16 rounded-full bg-gray-100 items-center justify-center mb-3">
+          <FontAwesomeIcon icon={faClipboardList} size={24} color="#9CA3AF" />
+        </View>
+        <Text className="text-sm text-gray-400">No checklist assigned</Text>
+      </View>
+    );
+  }
 
   return (
-    <View className="mx-4 mt-4 bg-white rounded-2xl px-4 py-4 overflow-hidden">
-      {/* Progress bar */}
-      <View className="h-1.5 bg-gray-100 rounded-full overflow-hidden mb-2">
-        <View
-          className="h-full rounded-full"
-          style={{
-            width: `${percentage}%`,
-            backgroundColor: progressColor,
-          }}
+    <View className="flex-1">
+      {/* Overall progress card */}
+      <View className="mx-4 mt-4 bg-white rounded-2xl px-4 py-4">
+        {/* Progress percentage */}
+        <View className="flex-row items-center justify-between mb-2">
+          <Text className="text-sm font-semibold text-gray-900">
+            {getPercentage(checklist)}% Complete
+          </Text>
+          <Text className="text-sm text-gray-500">
+            {checklist.completed}/{checklist.total}
+          </Text>
+        </View>
+
+        {/* Overall progress bar */}
+        <ProgressBar
+          percentage={getPercentage(checklist)}
+          height={6}
+          fillColor={getPercentage(checklist) === 100 ? "#10B981" : "#B7F0AD"}
         />
+
+        {/* Required items counter */}
+        {requiredStats.total > 0 && (
+          <Text className="text-xs text-gray-500 mt-2">
+            {requiredStats.completed} of {requiredStats.total} required items
+            completed
+            {requiredStats.incompleteIds.size > 0 && (
+              <Text className="text-xs text-amber-500">
+                {" \u2022 "}
+                {requiredStats.incompleteIds.size} remaining
+              </Text>
+            )}
+          </Text>
+        )}
       </View>
 
-      {/* Progress text */}
-      <Text className="text-xs text-gray-500 mb-2">
-        {completed}/{total} Complete
-      </Text>
-
-      {/* Items list */}
-      {visibleItems.map((item) => (
-        <ChecklistItemRow key={item.id} item={item} />
-      ))}
-
-      {/* Show more / less button */}
-      {hasOverflow ? (
-        <Pressable
-          onPress={() => setIsExpanded(!isExpanded)}
-          className="flex-row items-center justify-center gap-1 pt-3"
-        >
-          <Text className="text-sm font-medium text-[#2A5B4F]">
-            {isExpanded ? "Show less" : `Show ${remainingCount} more`}
-          </Text>
-          <FontAwesomeIcon
-            icon={isExpanded ? faChevronUp : faChevronDown}
-            size={12}
-            color="#2A5B4F"
+      {/* Room sections */}
+      <View className="mx-4 mt-3">
+        {sections.map((section) => (
+          <ChecklistSection
+            key={section.room}
+            room={section.room}
+            items={section.items}
+            disabled={isDisabled}
+            onToggle={handleToggle}
+            onCameraPress={handleCameraPress}
+            onPhotoPress={handlePhotoPress}
+            highlightItemIds={requiredStats.incompleteIds}
           />
-        </Pressable>
-      ) : null}
+        ))}
+      </View>
+
+      {/* Disabled state message */}
+      {isDisabled && (
+        <View className="mx-4 mt-2 mb-2">
+          <Text className="text-xs text-gray-400 text-center">
+            {jobStatus === "scheduled"
+              ? "Start the job to begin checking items"
+              : "Checklist is read-only in this state"}
+          </Text>
+        </View>
+      )}
+
+      {/* Photo required prompt modal */}
+      <PhotoRequiredPrompt
+        visible={photoPromptItemId !== null}
+        onTakePhoto={handleTakePhotoFromPrompt}
+        onCancel={handleCancelPrompt}
+      />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  completedCircle: {
-    backgroundColor: "#10B981",
-  },
-});

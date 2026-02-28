@@ -11,7 +11,7 @@ const http = require("http");
 const httpProxy = require("http-proxy");
 
 const PROXY_PORT = parseInt(process.env.PORT, 10) || 3001;
-const TARGET = "http://localhost:3000";
+const TARGET = process.env.API_TARGET || "https://app.cleanerhq.com";
 
 const proxy = httpProxy.createProxyServer({ target: TARGET, changeOrigin: true });
 
