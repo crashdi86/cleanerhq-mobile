@@ -21,9 +21,10 @@ import type { JobDetail } from "@/lib/api/types";
 
 interface BottomActionBarProps {
   job: JobDetail;
+  onChecklistGatePress?: () => void;
 }
 
-export function BottomActionBar({ job }: BottomActionBarProps) {
+export function BottomActionBar({ job, onChecklistGatePress }: BottomActionBarProps) {
   const insets = useSafeAreaInsets();
   const {
     actionState,
@@ -149,20 +150,21 @@ export function BottomActionBar({ job }: BottomActionBarProps) {
               style={({ pressed }) => [
                 componentStyles.button,
                 componentStyles.amberButton,
-                pressed && !actionState.canComplete
-                  ? undefined
-                  : pressed
-                    ? componentStyles.buttonPressed
-                    : undefined,
+                pressed && actionState.canComplete
+                  ? componentStyles.buttonPressed
+                  : undefined,
                 !actionState.canComplete && componentStyles.buttonDisabled,
                 isLoading && componentStyles.buttonDisabled,
               ]}
               onPress={() => {
-                if (!actionState.canComplete) return;
+                if (!actionState.canComplete) {
+                  onChecklistGatePress?.();
+                  return;
+                }
                 void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                 setShowConfirm(true);
               }}
-              disabled={!actionState.canComplete || isLoading}
+              disabled={isLoading}
             >
               {isLoading ? (
                 <ActivityIndicator color="#FFFFFF" size="small" />

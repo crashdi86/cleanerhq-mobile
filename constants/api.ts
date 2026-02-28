@@ -18,6 +18,14 @@ export const ENDPOINTS = {
   JOB_START: (id: string) => `/jobs/${id}/start` as const,
   JOB_COMPLETE: (id: string) => `/jobs/${id}/complete` as const,
 
+  // Jobs — photos
+  JOB_PHOTOS: (jobId: string) => `/jobs/${jobId}/photos` as const,
+
+  // Jobs — checklist
+  JOB_CHECKLIST: (id: string) => `/jobs/${id}/checklist` as const,
+  JOB_CHECKLIST_ITEM: (jobId: string, itemId: string) =>
+    `/jobs/${jobId}/checklist/${itemId}` as const,
+
   // Jobs — schedule & unassigned
   MY_SCHEDULE: "/jobs/my-schedule",
   JOBS_UNASSIGNED: "/jobs/unassigned",

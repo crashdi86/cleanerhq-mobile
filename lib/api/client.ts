@@ -154,6 +154,84 @@ async function handleResponse<T>(response: Response): Promise<T> {
   return (json as ApiSuccessResponse<T>).data;
 }
 
+// ── Multipart Upload Request ──
+
+async function uploadRequest<T>(
+  endpoint: string,
+  formData: FormData,
+  options: Omit<RequestOptions, "method" | "body"> = {}
+): Promise<T> {
+  const { headers = {}, authenticated = true } = options;
+  const url = `${API_BASE_URL}${endpoint}`;
+
+  // Do NOT set Content-Type — let fetch auto-set multipart boundary
+  const requestHeaders: Record<string, string> = { ...headers };
+
+  if (authenticated) {
+    const token = await TokenManager.getAccessToken();
+    if (token) {
+      requestHeaders["Authorization"] = `Bearer ${token}`;
+    }
+  }
+
+  if (__DEV__) {
+    console.log(`[API] UPLOAD POST ${endpoint}`);
+  }
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: requestHeaders,
+    body: formData,
+  });
+
+  // Track rate limit headers
+  const rlLimit = response.headers.get("X-RateLimit-Limit");
+  const rlRemaining = response.headers.get("X-RateLimit-Remaining");
+  const rlReset = response.headers.get("X-RateLimit-Reset");
+  if (rlLimit) rateLimitState.limit = parseInt(rlLimit, 10);
+  if (rlRemaining) rateLimitState.remaining = parseInt(rlRemaining, 10);
+  if (rlReset) rateLimitState.reset = parseInt(rlReset, 10);
+
+  // Handle 401 with token refresh
+  if (response.status === 401 && authenticated) {
+    let errorBody: ApiErrorResponse | null = null;
+    try {
+      errorBody = (await response.json()) as ApiErrorResponse;
+    } catch {
+      throw new ApiError("UNAUTHORIZED", "Unauthorized", undefined, 401);
+    }
+
+    if (errorBody?.error?.code === "TOKEN_EXPIRED") {
+      try {
+        const newToken = await TokenManager.refresh();
+        requestHeaders["Authorization"] = `Bearer ${newToken}`;
+        const retryResponse = await fetch(url, {
+          method: "POST",
+          headers: requestHeaders,
+          body: formData,
+        });
+        return handleResponse<T>(retryResponse);
+      } catch {
+        throw new ApiError(
+          "TOKEN_EXPIRED",
+          "Session expired. Please log in again.",
+          undefined,
+          401
+        );
+      }
+    }
+
+    throw new ApiError(
+      errorBody?.error?.code ?? "UNAUTHORIZED",
+      errorBody?.error?.message ?? "Unauthorized",
+      errorBody?.error?.details,
+      401
+    );
+  }
+
+  return handleResponse<T>(response);
+}
+
 // ── Exported Typed Client ──
 
 export const apiClient = {
@@ -184,4 +262,11 @@ export const apiClient = {
     endpoint: string,
     options?: Omit<RequestOptions, "method" | "body">
   ) => request<T>(endpoint, { ...options, method: "DELETE" }),
+
+  /** Upload FormData (multipart/form-data) — does NOT JSON.stringify the body */
+  upload: <T>(
+    endpoint: string,
+    formData: FormData,
+    options?: Omit<RequestOptions, "method" | "body">
+  ) => uploadRequest<T>(endpoint, formData, options),
 };

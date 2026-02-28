@@ -2,6 +2,7 @@ import { Redirect, Stack } from "expo-router";
 import { ActivityIndicator, View, StyleSheet } from "react-native";
 import { useAuthStore } from "@/store/auth-store";
 import { useClockStatusSync } from "@/hooks/useClockStatusSync";
+import { useUploadProcessor } from "@/hooks/useUploadProcessor";
 import { ClockStatusIndicator } from "@/components/navigation/ClockStatusIndicator";
 
 export default function AppLayout() {
@@ -11,6 +12,9 @@ export default function AppLayout() {
 
   // Keep clock state synced at the layout level
   useClockStatusSync();
+
+  // Auto-process photo upload queue in background
+  useUploadProcessor();
 
   if (!isSessionRestored || isLoading) {
     return (
@@ -52,6 +56,27 @@ export default function AppLayout() {
           }}
         />
         <Stack.Screen name="time-history" />
+        <Stack.Screen
+          name="annotate"
+          options={{
+            presentation: "fullScreenModal",
+            animation: "slide_from_bottom",
+          }}
+        />
+        <Stack.Screen
+          name="camera"
+          options={{
+            presentation: "fullScreenModal",
+            animation: "slide_from_bottom",
+          }}
+        />
+        <Stack.Screen
+          name="photo-review"
+          options={{
+            presentation: "fullScreenModal",
+            animation: "slide_from_bottom",
+          }}
+        />
       </Stack>
       <ClockStatusIndicator />
     </View>

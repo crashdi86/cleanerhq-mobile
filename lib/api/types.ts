@@ -205,29 +205,69 @@ export interface ClientContact {
   phone: string;
 }
 
+export interface ChecklistItemPhoto {
+  id: string;
+  thumbnail_url: string;
+}
+
 export interface ChecklistItem {
   id: string;
   label: string;
   required: boolean;
   completed: boolean;
   room?: string;
+  /** API may return "category" instead of "room" for section grouping */
+  category?: string;
+  notes?: string;
+  requires_photo?: boolean;
+  photos?: ChecklistItemPhoto[];
+  completed_at: string | null;
+  completed_by: string | null;
 }
 
 export interface JobChecklist {
   items: ChecklistItem[];
   completed: number;
   total: number;
-  percentage: number;
-  allRequiredCompleted: boolean;
+  /** API may return "progress" (0-100) instead of "percentage" */
+  percentage?: number;
+  progress?: number;
+  allRequiredCompleted?: boolean;
 }
+
+// ── Photo Types (M-04) ──
+
+export type PhotoCategory = "before" | "during" | "after" | "issue";
 
 export interface JobPhoto {
   id: string;
   url: string;
   thumbnail_url: string;
   type: "before" | "after" | "issue" | "general";
+  category?: PhotoCategory;
   uploaded_at: string;
   uploaded_by: string;
+  latitude?: number;
+  longitude?: number;
+  checklist_item_id?: string;
+}
+
+export interface PhotoUploadResponse {
+  id: string;
+  url: string;
+  category: PhotoCategory;
+}
+
+/** Local metadata for a photo staged for upload */
+export interface StagedPhoto {
+  localId: string;
+  uri: string;
+  category: PhotoCategory;
+  latitude: number | null;
+  longitude: number | null;
+  timestamp: string;
+  checklistItemId?: string;
+  annotated: boolean;
 }
 
 export interface CompletionRequirements {
