@@ -26,6 +26,9 @@ export const ENDPOINTS = {
   JOB_CHECKLIST_ITEM: (jobId: string, itemId: string) =>
     `/jobs/${jobId}/checklist/${itemId}` as const,
 
+  // Jobs — notes
+  JOB_NOTES: (id: string) => `/jobs/${id}/notes` as const,
+
   // Jobs — schedule & unassigned
   MY_SCHEDULE: "/jobs/my-schedule",
   JOBS_UNASSIGNED: "/jobs/unassigned",
@@ -33,6 +36,7 @@ export const ENDPOINTS = {
   // CRM & Team
   ACCOUNTS: "/accounts",
   ACCOUNT_DETAIL: (id: string) => `/accounts/${id}` as const,
+  ACCOUNT_NOTES: (id: string) => `/accounts/${id}/notes` as const,
   TEAM: "/team",
 
   // Time tracking

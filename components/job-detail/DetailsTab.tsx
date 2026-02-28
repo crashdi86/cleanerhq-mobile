@@ -1,10 +1,12 @@
 import React from "react";
 import { Linking, Platform } from "react-native";
 import { View, Text, Pressable } from "@/tw";
+import { useRouter } from "expo-router";
 import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
 import {
   faDiamondTurnRight,
   faPhone,
+  faChevronRight,
 } from "@fortawesome/free-solid-svg-icons";
 import { formatDuration, formatPhoneDisplay, formatFullAddress } from "@/lib/job-actions";
 import { TeamMemberList } from "@/components/job-detail/TeamMemberList";
@@ -88,6 +90,7 @@ function DetailRow({ label, value, icon, onIconPress, isLast }: DetailRowProps) 
 }
 
 export function DetailsTab({ job }: DetailsTabProps) {
+  const router = useRouter();
   const scheduledTime = formatScheduledTime(
     job.scheduled_start,
     job.scheduled_end
@@ -105,7 +108,19 @@ export function DetailsTab({ job }: DetailsTabProps) {
       <DetailRow label="Service Type" value={job.job_type} />
       <DetailRow label="Scheduled Time" value={scheduledTime} />
       <DetailRow label="Estimated Duration" value={estimatedDuration} />
-      <DetailRow label="Client" value={job.account_name} />
+
+      {/* Client row — tappable, navigates to account detail */}
+      <DetailRow
+        label="Client"
+        value={job.account_name}
+        icon={faChevronRight}
+        onIconPress={() =>
+          router.push({
+            pathname: "/(app)/accounts/[id]" as const,
+            params: { id: job.account.id },
+          } as never)
+        }
+      />
 
       {/* Address row with navigation icon */}
       <DetailRow

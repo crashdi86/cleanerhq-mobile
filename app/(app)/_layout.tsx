@@ -56,6 +56,7 @@ export default function AppLayout() {
           }}
         />
         <Stack.Screen name="time-history" />
+        <Stack.Screen name="accounts/[id]" />
         <Stack.Screen
           name="annotate"
           options={{
