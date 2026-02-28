@@ -1,5 +1,6 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useApiQuery, useApiMutation } from "@/lib/api/hooks";
+import { useCachedQuery } from "@/hooks/useCachedQuery";
 import { apiClient, type ApiError } from "@/lib/api/client";
 import { queryClient } from "@/lib/api/query-client";
 import { ENDPOINTS } from "@/constants/api";
@@ -73,15 +74,17 @@ export function useAddJobNote(jobId: string) {
 
 // ── Account Detail ──
 
-/** Fetch account detail by ID */
+/** Fetch account detail by ID (with offline cache) */
 export function useAccountDetail(accountId: string) {
-  return useApiQuery<AccountDetail>(
+  return useCachedQuery<AccountDetail>(
     ["account", accountId],
     () =>
       apiClient.get<AccountDetail>(ENDPOINTS.ACCOUNT_DETAIL(accountId)),
     {
       staleTime: 60_000,
       enabled: !!accountId,
+      entityType: "account",
+      cacheKey: `account:${accountId}`,
     }
   );
 }

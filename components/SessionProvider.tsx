@@ -7,6 +7,7 @@ import { configureAuth } from "@/lib/auth/configure-auth";
 import { apiClient } from "@/lib/api/client";
 import { ENDPOINTS } from "@/constants/api";
 import { BiometricUtils } from "@/hooks/useBiometric";
+import { hydrateQueryCacheFromOffline } from "@/lib/offline/cache-hydrator";
 import type { ProfileResponse } from "@/lib/api/types";
 
 export function SessionProvider({ children }: { children: React.ReactNode }) {
@@ -65,6 +66,9 @@ async function restoreSession(): Promise<void> {
         return;
       }
     }
+
+    // Hydrate React Query cache from offline storage (instant render on cached screens)
+    await hydrateQueryCacheFromOffline();
 
     // Validate token by fetching user profile
     const profile = await apiClient.get<ProfileResponse>(ENDPOINTS.PROFILE);

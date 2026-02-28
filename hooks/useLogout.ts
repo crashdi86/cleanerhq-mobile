@@ -5,6 +5,8 @@ import { apiClient } from "@/lib/api/client";
 import { ENDPOINTS } from "@/constants/api";
 import { useAuthStore } from "@/store/auth-store";
 import { queryClient } from "@/lib/api/query-client";
+import { cacheStorage } from "@/lib/offline";
+import { useSyncStore } from "@/store/sync-store";
 
 export function useLogout() {
   return useCallback(async () => {
@@ -21,10 +23,16 @@ export function useLogout() {
     // 3. Clear React Query cache
     queryClient.clear();
 
-    // 4. Reset Zustand auth store
+    // 4. Clear offline cache storage
+    await cacheStorage.clear();
+
+    // 5. Clear sync state
+    useSyncStore.getState().reset();
+
+    // 6. Reset Zustand auth store
     useAuthStore.getState().logout();
 
-    // 5. Navigate to login (replace prevents back navigation)
+    // 7. Navigate to login (replace prevents back navigation)
     router.replace("/(auth)/login");
   }, []);
 }
