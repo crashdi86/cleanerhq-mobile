@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Schedule & Route - CleanerHQ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.plot.ly/plotly-3.1.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+    <script>
+        window.FontAwesomeConfig = { autoReplaceSvg: 'nest' };
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            DEFAULT: '#2A5B4F', // Forest Teal
+                            dark: '#234E43',
+                            light: '#3D7A6B',
+                            glass: 'rgba(42, 91, 79, 0.95)'
+                        },
+                        secondary: {
+                            DEFAULT: '#B7F0AD', // Success/Accents
+                            dim: '#9AD690',
+                            light: '#E3F9DF'
+                        },
+                        accent: {
+                            bg: '#F0F7F2', // Card tints
+                            surface: '#F8F9FA',
+                            blue: '#DCEAF9',
+                            orange: '#F9EADC'
+                        },
+                        logo: '#5EBD6D',
+                        error: '#991B1B',
+                        warning: '#F59E0B',
+                        success: '#10B981',
+                        gray: {
+                            850: '#1F2937',
+                            950: '#0B1120'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
+                    },
+                    boxShadow: {
+                        'soft': '0 8px 24px -4px rgba(42, 91, 79, 0.08)',
+                        'card': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
+                        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.07)',
+                        'floating': '0 16px 48px -12px rgba(42, 91, 79, 0.25)',
+                        'glow': '0 0 25px rgba(183, 240, 173, 0.6)',
+                        'inner-light': 'inset 0 2px 4px 0 rgba(255, 255, 255, 0.3)',
+                    },
+                    backgroundImage: {
+                        'forest-gradient': 'linear-gradient(135deg, #2A5B4F 0%, #234E43 100%)',
+                        'glass-gradient': 'linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                        'slide-up': 'slideUp 0.3s ease-out forwards',
+                        'fade-in': 'fadeIn 0.4s ease-out forwards',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(100%)' },
+                            '100%': { transform: 'translateY(0)' },
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #F0F2F5;
+            -webkit-font-smoothing: antialiased;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        ::-webkit-scrollbar { width: 0px; background: transparent; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .safe-top { padding-top: max(env(safe-area-inset-top), 20px); }
+        .safe-bottom { padding-bottom: max(env(safe-area-inset-bottom), 20px); }
+
+        .glass-header {
+            background: linear-gradient(135deg, rgba(42, 91, 79, 0.95) 0%, rgba(35, 78, 67, 0.98) 100%);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .map-gradient-overlay {
+            background: linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(248,249,250,1) 90%);
+        }
+
+        .sortable-ghost {
+            opacity: 0.4;
+            background: #F0F7F2;
+            border: 2px dashed #2A5B4F;
+        }
+        
+        .sortable-drag {
+            cursor: grabbing;
+            opacity: 1;
+            background: white;
+            box-shadow: 0 16px 48px -12px rgba(42, 91, 79, 0.25);
+            transform: scale(1.02);
+        }
+
+        /* Profit Guard Badges */
+        .profit-badge {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: white;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+        .profit-badge.high { background-color: #10B981; } /* Green */
+        .profit-badge.med { background-color: #F59E0B; } /* Amber */
+        .profit-badge.low { background-color: #EF4444; } /* Red */
+    </style>
+</head>
+<body class="bg-[#F0F2F5] min-h-screen flex items-center justify-center p-4 sm:p-8 overflow-x-hidden">
+
+    <!-- Mobile Frame Container -->
+    <main id="schedule-container" class="relative w-full max-w-[430px] h-[min(920px,95vh)] bg-[#F8F9FA] sm:rounded-[36px] shadow-2xl overflow-hidden flex flex-col z-10 border-[6px] border-gray-900/5">
+        
+        <!-- Role Toggle (For Demo Purposes) -->
+        <div class="absolute top-2 left-1/2 transform -translate-x-1/2 z-[60] bg-black/80 backdrop-blur-md rounded-full px-1 py-1 flex gap-1 shadow-lg border border-white/10">
+            <button onclick="switchRole('owner')" id="role-owner" class="px-3 py-1 rounded-full text-[10px] font-bold text-white bg-primary transition-all">Owner</button>
+            <button onclick="switchRole('staff')" id="role-staff" class="px-3 py-1 rounded-full text-[10px] font-bold text-gray-300 hover:text-white transition-all">Staff</button>
+        </div>
+
+        <!-- Header Section -->
+        <header class="relative z-30 glass-header pt-safe-top pb-4 shrink-0 rounded-b-[32px] shadow-soft transition-all duration-300">
+            <!-- Background Decor -->
+            <div class="absolute top-0 right-0 w-64 h-64 bg-[#B7F0AD] rounded-full blur-3xl opacity-10 pointer-events-none transform translate-x-1/2 -translate-y-1/2"></div>
+            
+            <!-- Top Bar -->
+            <div class="relative px-5 pt-4 flex justify-between items-center mb-4">
+                <div class="flex items-center gap-3">
+                    <button class="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-95">
+                        <i class="fa-solid fa-bars text-sm"></i>
+                    </button>
+                    <div class="flex flex-col">
+                        <h1 class="text-lg font-bold text-white tracking-tight leading-none">Schedule</h1>
+                        <p class="text-[11px] text-white/70 font-medium mt-0.5" id="current-date">Today, Feb 24</p>
+                    </div>
+                </div>
+
+                <div class="flex gap-2">
+                    <button class="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-95 relative">
+                        <i class="fa-solid fa-bell text-sm"></i>
+                        <span class="absolute top-2 right-2.5 w-2 h-2 bg-error rounded-full border border-primary-dark"></span>
+                    </button>
+                    <div class="w-10 h-10 rounded-xl bg-secondary text-primary-dark font-bold flex items-center justify-center border-2 border-white/20 shadow-lg overflow-hidden">
+                        <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-2.jpg" class="w-full h-full object-cover" alt="Profile">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Date Scroller (Horizontal Calendar) -->
+            <div class="relative px-1 pb-1">
+                <div class="flex overflow-x-auto no-scrollbar gap-2 px-4 snap-x">
+                    <!-- Day Items -->
+                    <button class="snap-center flex flex-col items-center justify-center min-w-[56px] h-[72px] rounded-2xl bg-white/10 border border-white/5 text-white/60 hover:bg-white/20 transition-all">
+                        <span class="text-[10px] font-medium uppercase tracking-wider mb-1">Mon</span>
+                        <span class="text-lg font-bold">23</span>
+                    </button>
+                    <button class="snap-center flex flex-col items-center justify-center min-w-[56px] h-[72px] rounded-2xl bg-secondary text-primary-dark shadow-glow transform scale-105 border-2 border-white/20 relative z-10">
+                        <span class="text-[10px] font-bold uppercase tracking-wider mb-1">Tue</span>
+                        <span class="text-lg font-extrabold">24</span>
+                        <div class="absolute -bottom-1 w-1 h-1 bg-primary-dark rounded-full"></div>
+                    </button>
+                    <button class="snap-center flex flex-col items-center justify-center min-w-[56px] h-[72px] rounded-2xl bg-white/10 border border-white/5 text-white/60 hover:bg-white/20 transition-all relative">
+                        <span class="text-[10px] font-medium uppercase tracking-wider mb-1">Wed</span>
+                        <span class="text-lg font-bold">25</span>
+                        <div class="absolute top-1 right-1 w-1.5 h-1.5 bg-secondary rounded-full"></div>
+                    </button>
+                    <button class="snap-center flex flex-col items-center justify-center min-w-[56px] h-[72px] rounded-2xl bg-white/10 border border-white/5 text-white/60 hover:bg-white/20 transition-all">
+                        <span class="text-[10px] font-medium uppercase tracking-wider mb-1">Thu</span>
+                        <span class="text-lg font-bold">26</span>
+                    </button>
+                    <button class="snap-center flex flex-col items-center justify-center min-w-[56px] h-[72px] rounded-2xl bg-white/10 border border-white/5 text-white/60 hover:bg-white/20 transition-all">
+                        <span class="text-[10px] font-medium uppercase tracking-wider mb-1">Fri</span>
+                        <span class="text-lg font-bold">27</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- OWNER VIEW CONTENT -->
+        <div id="owner-view" class="flex-1 overflow-y-auto bg-[#F8F9FA] scroll-smooth no-scrollbar flex flex-col pb-32">
+            
+            <!-- Map Preview Section -->
+            <section class="relative h-48 w-full bg-gray-200 mb-4 group">
+                <!-- Static Map Image Placeholder -->
+                <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('https://api.mapbox.com/styles/v1/mapbox/light-v10/static/-97.7431,30.2672,12,0/600x400?access_token=pk.placeholder'); filter: grayscale(20%);"></div>
+                <div class="absolute inset-0 bg-primary/5"></div>
+                
+                <!-- Map Markers (CSS Simulation) -->
+                <div class="absolute top-1/3 left-1/4 w-8 h-8 -ml-4 -mt-4 flex items-center justify-center z-10">
+                    <div class="w-3 h-3 bg-secondary rounded-full shadow-[0_0_0_4px_rgba(42,91,79,0.4)] animate-pulse"></div>
+                    <div class="absolute -top-8 bg-white px-2 py-1 rounded shadow-md text-[10px] font-bold text-gray-800 whitespace-nowrap">Team A</div>
+                </div>
+                <div class="absolute bottom-1/3 right-1/3 w-8 h-8 -ml-4 -mt-4 flex items-center justify-center z-10">
+                    <div class="w-3 h-3 bg-primary rounded-full shadow-[0_0_0_4px_rgba(255,255,255,0.6)]"></div>
+                    <div class="absolute -top-8 bg-white px-2 py-1 rounded shadow-md text-[10px] font-bold text-gray-800 whitespace-nowrap">Team B</div>
+                </div>
+
+                <!-- Map Controls Overlay -->
+                <div class="absolute bottom-4 right-4 flex gap-2">
+                    <button class="w-10 h-10 bg-white rounded-xl shadow-lg flex items-center justify-center text-gray-600 hover:text-primary active:scale-95 transition-all">
+                        <i class="fa-solid fa-location-crosshairs"></i>
+                    </button>
+                    <button class="h-10 px-4 bg-primary text-white rounded-xl shadow-lg flex items-center justify-center text-xs font-bold gap-2 active:scale-95 transition-all">
+                        <i class="fa-solid fa-map"></i> Full Map
+                    </button>
+                </div>
+                
+                <div class="absolute bottom-0 left-0 w-full h-12 map-gradient-overlay pointer-events-none"></div>
+            </section>
+
+            <!-- Optimization Controls -->
+            <div class="px-5 mb-4 flex justify-between items-center">
+                <h2 class="text-sm font-bold text-gray-800 uppercase tracking-wide">Route Optimization</h2>
+                <button class="text-[10px] font-bold text-primary bg-primary/10 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 hover:bg-primary/20 transition-colors">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Auto-Optimize
+                </button>
+            </div>
+
+            <!-- Unassigned Pool (Draggable) -->
+            <section class="px-5 mb-6">
+                <div class="bg-white rounded-2xl p-4 shadow-card border border-gray-100">
+                    <div class="flex justify-between items-center mb-3">
+                        <div class="flex items-center gap-2">
+                            <div class="w-6 h-6 rounded-lg bg-gray-100 text-gray-500 flex items-center justify-center text-xs">
+                                <i class="fa-solid fa-inbox"></i>
+                            </div>
+                            <span class="text-xs font-bold text-gray-600">Unassigned Jobs (2)</span>
+                        </div>
+                        <button class="text-primary text-[10px] font-bold">View All</button>
+                    </div>
+                    
+                    <div id="unassigned-list" class="space-y-2 min-h-[40px]">
+                        <!-- Draggable Item 1 -->
+                        <div class="p-3 bg-gray-50 rounded-xl border border-gray-200 border-dashed flex items-center justify-between group cursor-grab active:cursor-grabbing hover:bg-white hover:border-primary/30 transition-all">
+                            <div class="flex items-center gap-3">
+                                <div class="w-1.5 h-8 bg-warning rounded-full"></div>
+                                <div>
+                                    <h4 class="text-xs font-bold text-gray-800">The Glass House</h4>
+                                    <p class="text-[10px] text-gray-500">2.5 hrs • Deep Clean</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="w-5 h-5 rounded-full bg-yellow-100 flex items-center justify-center border border-white shadow-sm" title="Moderate Margin">
+                                    <i class="fa-solid fa-shield text-warning text-[10px]"></i>
+                                </div>
+                                <div class="w-6 h-6 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-400">
+                                    <i class="fa-solid fa-grip-vertical text-[10px]"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Draggable Item 2 -->
+                        <div class="p-3 bg-gray-50 rounded-xl border border-gray-200 border-dashed flex items-center justify-between group cursor-grab active:cursor-grabbing hover:bg-white hover:border-primary/30 transition-all">
+                            <div class="flex items-center gap-3">
+                                <div class="w-1.5 h-8 bg-gray-300 rounded-full"></div>
+                                <div>
+                                    <h4 class="text-xs font-bold text-gray-800">Downtown Loft</h4>
+                                    <p class="text-[10px] text-gray-500">1.5 hrs • Standard</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center border border-white shadow-sm" title="High Margin">
+                                    <i class="fa-solid fa-shield text-success text-[10px]"></i>
+                                </div>
+                                <div class="w-6 h-6 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-400">
+                                    <i class="fa-solid fa-grip-vertical text-[10px]"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button class="w-full mt-3 py-2 border border-primary/20 text-primary text-xs font-bold rounded-xl hover:bg-primary/5 transition-colors flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-calendar-plus"></i> Find Available Slots
+                    </button>
+                </div>
+            </section>
+
+            <!-- Team Schedules -->
+            <section class="px-5 space-y-6">
+                <!-- Team A (Maria) -->
+                <div>
+                    <div class="flex justify-between items-center mb-3">
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 rounded-full bg-secondary text-primary-dark font-bold text-xs flex items-center justify-center border border-primary/10">M</div>
+                            <div>
+                                <h3 class="text-sm font-bold text-gray-900">Maria's Route</h3>
+                                <p class="text-[10px] text-gray-500">Started 8:00 AM • On Time</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] font-bold text-primary bg-primary/5 px-2 py-1 rounded-md">5 Jobs</span>
+                            <span class="text-[10px] font-bold text-gray-500 bg-gray-100 px-2 py-1 rounded-md">7.5 hrs</span>
+                        </div>
+                    </div>
+
+                    <div id="team-a-list" class="space-y-3 relative">
+                        <!-- Connecting Line -->
+                        <div class="absolute left-[19px] top-4 bottom-4 w-0.5 bg-gray-200 -z-10"></div>
+
+                        <!-- Job 1: Completed -->
+                        <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex gap-3 opacity-60">
+                            <div class="flex flex-col items-center gap-1">
+                                <div class="w-10 h-10 rounded-full bg-secondary/20 flex items-center justify-center text-secondary border border-secondary/20">
+                                    <i class="fa-solid fa-check text-sm"></i>
+                                </div>
+                                <span class="text-[10px] font-bold text-gray-400">08:00</span>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex justify-between items-start">
+                                    <h4 class="text-sm font-bold text-gray-800 line-through decoration-gray-400">Westside Office Park</h4>
+                                    <!-- Profit Guard Badge -->
+                                    <div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center border border-white shadow-sm" title="High Margin">
+                                        <i class="fa-solid fa-shield text-success text-[10px]"></i>
+                                    </div>
+                                </div>
+                                <p class="text-xs text-gray-400">Commercial • 2.0 hrs</p>
+                            </div>
+                        </div>
+
+                        <!-- Job 2: In Progress -->
+                        <div class="bg-white rounded-2xl p-4 shadow-card border-l-4 border-primary relative overflow-hidden">
+                            <div class="absolute right-0 top-0 w-16 h-16 bg-gradient-to-br from-secondary/20 to-transparent rounded-bl-full -mr-4 -mt-4"></div>
+                            
+                            <div class="flex gap-3">
+                                <div class="flex flex-col items-center gap-1">
+                                    <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/30 ring-4 ring-white">
+                                        <i class="fa-solid fa-broom fa-spin-pulse text-sm"></i>
+                                    </div>
+                                    <span class="text-[10px] font-bold text-primary">10:30</span>
+                                </div>
+                                <div class="flex-1 relative z-10">
+                                    <div class="flex justify-between items-start mb-1">
+                                        <h4 class="text-sm font-bold text-gray-900">Riverside Estate</h4>
+                                        <div class="w-5 h-5 rounded-full bg-yellow-100 flex items-center justify-center border border-white shadow-sm" title="Moderate Margin">
+                                            <i class="fa-solid fa-shield text-warning text-[10px]"></i>
+                                        </div>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mb-2">Residential • 3.5 hrs</p>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-[10px] font-bold text-white bg-primary px-2 py-0.5 rounded-full">In Progress</span>
+                                        <span class="text-[10px] font-medium text-gray-400"><i class="fa-regular fa-clock mr-1"></i>Est. finish 14:00</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Job 3: Scheduled (Draggable) -->
+                        <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex gap-3 group cursor-grab active:cursor-grabbing hover:border-primary/30 transition-all">
+                            <div class="flex flex-col items-center gap-1 pt-1">
+                                <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 border border-gray-200">
+                                    <span class="text-xs font-bold">3</span>
+                                </div>
+                                <span class="text-[10px] font-bold text-gray-400">14:30</span>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex justify-between items-start">
+                                    <h4 class="text-sm font-bold text-gray-800">The Modern Condo</h4>
+                                    <div class="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center border border-white shadow-sm" title="Low Margin">
+                                        <i class="fa-solid fa-shield text-error text-[10px]"></i>
+                                    </div>
+                                </div>
+                                <p class="text-xs text-gray-500">Deep Clean • 2.0 hrs</p>
+                                <div class="mt-2 flex items-center text-[10px] text-gray-400 gap-1 bg-gray-50 w-fit px-2 py-0.5 rounded-md">
+                                    <i class="fa-solid fa-car"></i> 15 min drive
+                                </div>
+                            </div>
+                            <div class="flex items-center text-gray-300">
+                                <i class="fa-solid fa-grip-vertical"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Team B (David/Other) -->
+                <div class="opacity-80">
+                    <div class="flex justify-between items-center mb-3">
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 rounded-full bg-gray-800 text-white font-bold text-xs flex items-center justify-center border border-gray-600">D</div>
+                            <div>
+                                <h3 class="text-sm font-bold text-gray-900">David's Route</h3>
+                                <p class="text-[10px] text-gray-500">Estimates & QC</p>
+                            </div>
+                        </div>
+                        <button class="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 hover:bg-gray-200">
+                            <i class="fa-solid fa-chevron-down text-xs"></i>
+                        </button>
+                    </div>
+                    <!-- Collapsed view preview -->
+                    <div class="bg-white rounded-2xl p-3 shadow-sm border border-gray-100 flex items-center justify-between">
+                        <div class="flex -space-x-2">
+                            <div class="w-8 h-8 rounded-full bg-green-50 border-2 border-white flex items-center justify-center text-[10px] font-bold text-primary">Q1</div>
+                            <div class="w-8 h-8 rounded-full bg-blue-50 border-2 border-white flex items-center justify-center text-[10px] font-bold text-blue-600">Q2</div>
+                            <div class="w-8 h-8 rounded-full bg-orange-50 border-2 border-white flex items-center justify-center text-[10px] font-bold text-orange-600">QC</div>
+                        </div>
+                        <span class="text-xs font-bold text-gray-500">3 Stops Remaining</span>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- STAFF VIEW CONTENT (Hidden by default, toggled via JS) -->
+        <div id="staff-view" class="hidden flex-1 overflow-y-auto bg-[#F8F9FA] scroll-smooth no-scrollbar flex flex-col pb-32">
+            
+            <!-- Today's Overview Card -->
+            <section class="px-5 pt-2 mb-6">
+                <div class="bg-primary rounded-3xl p-6 text-white shadow-floating relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
+                    <div class="absolute bottom-0 left-0 w-24 h-24 bg-secondary/20 rounded-full blur-xl -ml-5 -mb-5"></div>
+                    
+                    <div class="relative z-10 flex justify-between items-start mb-6">
+                        <div>
+                            <p class="text-secondary font-bold text-xs uppercase tracking-wider mb-1">Today's Progress</p>
+                            <h2 class="text-2xl font-bold">1 of 3 Jobs</h2>
+                        </div>
+                        <div class="w-12 h-12 rounded-full border-4 border-white/20 flex items-center justify-center relative">
+                            <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                                <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="3" />
+                                <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#B7F0AD" stroke-width="3" stroke-dasharray="33, 100" />
+                            </svg>
+                            <span class="absolute text-xs font-bold">33%</span>
+                        </div>
+                    </div>
+
+                    <div class="relative z-10 grid grid-cols-2 gap-4">
+                        <div class="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/10">
+                            <div class="flex items-center gap-2 mb-1">
+                                <i class="fa-solid fa-clock text-secondary text-xs"></i>
+                                <span class="text-[10px] font-medium text-white/80">Est. Finish</span>
+                            </div>
+                            <span class="text-lg font-bold">4:30 PM</span>
+                        </div>
+                        <div class="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/10">
+                            <div class="flex items-center gap-2 mb-1">
+                                <i class="fa-solid fa-route text-secondary text-xs"></i>
+                                <span class="text-[10px] font-medium text-white/80">Total Drive</span>
+                            </div>
+                            <span class="text-lg font-bold">45 min</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Current Job Focus -->
+            <section class="px-5 mb-8">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wide">Current Job</h3>
+                    <span class="text-[10px] font-bold text-white bg-primary px-2 py-0.5 rounded-full animate-pulse">Active</span>
+                </div>
+                
+                <div class="bg-white rounded-2xl shadow-card border-l-4 border-primary overflow-hidden">
+                    <div class="p-5">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <h4 class="text-lg font-bold text-gray-900">Riverside Estate</h4>
+                                <p class="text-sm text-gray-500">4521 Maplewood Drive</p>
+                            </div>
+                            <a href="#" class="w-10 h-10 rounded-full bg-accent-blue/50 text-blue-600 flex items-center justify-center hover:bg-accent-blue transition-colors">
+                                <i class="fa-solid fa-location-arrow text-sm"></i>
+                            </a>
+                        </div>
+                        
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="px-2 py-1 bg-gray-100 rounded-md text-[10px] font-bold text-gray-600">Residential</span>
+                            <span class="px-2 py-1 bg-purple-50 text-purple-700 rounded-md text-[10px] font-bold">Pet Treatment</span>
+                            <span class="px-2 py-1 bg-orange-50 text-orange-700 rounded-md text-[10px] font-bold">Gate: #4821</span>
+                        </div>
+                        
+                        <div class="w-full bg-gray-100 rounded-full h-2 mb-2">
+                            <div class="bg-primary h-2 rounded-full" style="width: 45%"></div>
+                        </div>
+                        <div class="flex justify-between text-[10px] font-medium text-gray-500">
+                            <span>Checklist: 4/9 done</span>
+                            <span>1h 15m elapsed</span>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-5 py-3 border-t border-gray-100 flex justify-between items-center">
+                        <span class="text-xs font-bold text-gray-600">Next: The Modern Condo</span>
+                        <button class="text-primary text-xs font-bold flex items-center gap-1">
+                            View Checklist <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Up Next Timeline -->
+            <section class="px-5">
+                <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wide mb-4">Up Next</h3>
+                
+                <div class="relative pl-4 space-y-6">
+                    <!-- Timeline Line -->
+                    <div class="absolute left-[19px] top-2 bottom-2 w-0.5 bg-gray-200"></div>
+
+                    <!-- Drive Time Indicator -->
+                    <div class="relative flex items-center gap-4 ml-1">
+                        <div class="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center z-10 shadow-sm">
+                            <i class="fa-solid fa-car text-gray-400 text-xs"></i>
+                        </div>
+                        <div class="bg-gray-100 rounded-lg px-3 py-1.5 text-[10px] font-bold text-gray-600 flex items-center gap-2">
+                            <span>15 min drive</span>
+                            <span class="w-1 h-1 bg-gray-400 rounded-full"></span>
+                            <span>3.2 miles</span>
+                        </div>
+                    </div>
+
+                    <!-- Next Job Card -->
+                    <div class="relative flex gap-4">
+                        <div class="flex flex-col items-center gap-1 z-10 pt-1">
+                            <div class="w-10 h-10 rounded-full bg-white border-2 border-gray-200 flex items-center justify-center text-gray-400 font-bold shadow-sm">
+                                3
+                            </div>
+                            <span class="text-[10px] font-bold text-gray-500">14:30</span>
+                        </div>
+                        <div class="flex-1 bg-white rounded-2xl p-4 shadow-sm border border-gray-100 opacity-60 hover:opacity-100 transition-opacity cursor-pointer">
+                            <div class="flex justify-between items-start mb-1">
+                                <h4 class="text-sm font-bold text-gray-800">The Modern Condo</h4>
+                                <span class="bg-gray-100 text-gray-500 text-[10px] font-bold px-2 py-0.5 rounded-full">2.0h</span>
+                            </div>
+                            <p class="text-xs text-gray-500 mb-2">Deep Clean • 2300 Main St</p>
+                            <div class="flex gap-2">
+                                <span class="w-6 h-6 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 border border-gray-100">
+                                    <i class="fa-solid fa-key text-[10px]"></i>
+                                </span>
+                                <span class="w-6 h-6 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 border border-gray-100">
+                                    <i class="fa-solid fa-dog text-[10px]"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Bottom Actions Panel (Navigation) -->
+        <div class="absolute bottom-0 left-0 w-full bg-white border-t border-gray-100 pb-safe-bottom pt-2 px-2 z-40 rounded-t-[32px] shadow-[0_-8px_30px_rgba(0,0,0,0.05)]">
+            <nav class="flex justify-around items-center h-16">
+                <!-- Owner Home -->
+                <button class="flex flex-col items-center justify-center w-16 h-full gap-1 text-gray-400 hover:text-gray-600 transition-colors group">
+                    <i class="fa-solid fa-house text-xl mb-0.5 group-hover:-translate-y-0.5 transition-transform"></i>
+                    <span class="text-[10px] font-medium">Home</span>
+                </button>
+                
+                <!-- Schedule (Active) -->
+                <button class="flex flex-col items-center justify-center w-16 h-full gap-1 text-primary relative">
+                    <div class="absolute -top-10 bg-primary rounded-full p-3 shadow-floating border-4 border-[#F8F9FA] transform transition-transform hover:scale-110">
+                        <i class="fa-solid fa-calendar-day text-white text-xl"></i>
+                    </div>
+                    <span class="text-[10px] font-bold tracking-tight mt-6">Schedule</span>
+                </button>
+                
+                <!-- Quotes -->
+                <button class="flex flex-col items-center justify-center w-16 h-full gap-1 text-gray-400 hover:text-gray-600 transition-colors group">
+                    <i class="fa-solid fa-file-invoice-dollar text-xl mb-0.5 group-hover:-translate-y-0.5 transition-transform"></i>
+                    <span class="text-[10px] font-medium">Quotes</span>
+                </button>
+                
+                <!-- Clients -->
+                <button class="flex flex-col items-center justify-center w-16 h-full gap-1 text-gray-400 hover:text-gray-600 transition-colors group">
+                    <i class="fa-solid fa-users text-xl mb-0.5 group-hover:-translate-y-0.5 transition-transform"></i>
+                    <span class="text-[10px] font-medium">Clients</span>
+                </button>
+                
+                <!-- More -->
+                <button class="flex flex-col items-center justify-center w-16 h-full gap-1 text-gray-400 hover:text-gray-600 transition-colors group">
+                    <i class="fa-solid fa-grid-2 text-xl mb-0.5 group-hover:-translate-y-0.5 transition-transform"></i>
+                    <span class="text-[10px] font-medium">More</span>
+                </button>
+            </nav>
+        </div>
+
+        <!-- AI Copilot FAB -->
+        <button id="ai-fab" class="absolute bottom-24 right-4 w-14 h-14 bg-gradient-to-br from-primary to-primary-light rounded-full shadow-floating flex items-center justify-center text-white z-50 animate-float hover:scale-110 transition-transform active:scale-90 border-2 border-white/20 group">
+            <i class="fa-solid fa-sparkles text-xl group-hover:rotate-12 transition-transform"></i>
+            <!-- Pulse Effect -->
+            <span class="absolute top-0 right-0 w-3 h-3 bg-secondary rounded-full border-2 border-primary animate-pulse"></span>
+        </button>
+
+    </main>
+
+    <script>
+        // SortableJS initialization for Drag and Drop
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // Team A List Sortable
+            new Sortable(document.getElementById('team-a-list'), {
+                group: 'shared',
+                animation: 150,
+                ghostClass: 'sortable-ghost',
+                dragClass: 'sortable-drag',
+                handle: '.fa-grip-vertical',
+                onEnd: function (evt) {
+                    // Logic to update route sequence would go here
+                    console.log('Moved item from ' + evt.oldIndex + ' to ' + evt.newIndex);
+                }
+            });
+
+            // Unassigned List Sortable
+            new Sortable(document.getElementById('unassigned-list'), {
+                group: 'shared',
+                animation: 150,
+                ghostClass: 'sortable-ghost',
+                dragClass: 'sortable-drag',
+                handle: '.fa-grip-vertical'
+            });
+
+            // Set current date
+            const dateOptions = { weekday: 'long', month: 'short', day: 'numeric' };
+            document.getElementById('current-date').textContent = new Date().toLocaleDateString('en-US', dateOptions);
+        });
+
+        // Role Switching Logic (Demo Feature)
+        function switchRole(role) {
+            const ownerView = document.getElementById('owner-view');
+            const staffView = document.getElementById('staff-view');
+            const ownerBtn = document.getElementById('role-owner');
+            const staffBtn = document.getElementById('role-staff');
+
+            if (role === 'owner') {
+                ownerView.classList.remove('hidden');
+                staffView.classList.add('hidden');
+                
+                ownerBtn.classList.remove('text-gray-300', 'hover:text-white');
+                ownerBtn.classList.add('text-white', 'bg-primary');
+                
+                staffBtn.classList.add('text-gray-300', 'hover:text-white');
+                staffBtn.classList.remove('text-white', 'bg-primary');
+            } else {
+                ownerView.classList.add('hidden');
+                staffView.classList.remove('hidden');
+                
+                staffBtn.classList.remove('text-gray-300', 'hover:text-white');
+                staffBtn.classList.add('text-white', 'bg-primary');
+                
+                ownerBtn.classList.add('text-gray-300', 'hover:text-white');
+                ownerBtn.classList.remove('text-white', 'bg-primary');
+            }
+        }
+    </script>
+</body>
+</html>

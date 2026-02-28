@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Clock In - CleanerHQ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        window.FontAwesomeConfig = { autoReplaceSvg: 'nest' };
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            DEFAULT: '#2A5B4F', // Forest Teal
+                            dark: '#234E43',
+                            light: '#3D7A6B',
+                            glass: 'rgba(42, 91, 79, 0.95)'
+                        },
+                        secondary: {
+                            DEFAULT: '#B7F0AD', // Success/Accents
+                            dim: '#9AD690',
+                            light: '#E3F9DF'
+                        },
+                        accent: {
+                            bg: '#F0F7F2', // Card tints
+                            surface: '#F8F9FA',
+                            blue: '#DCEAF9',
+                            orange: '#F9EADC'
+                        },
+                        logo: '#5EBD6D',
+                        error: '#991B1B',
+                        warning: '#F59E0B',
+                        success: '#10B981',
+                        gray: {
+                            850: '#1F2937',
+                            950: '#0B1120'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
+                    },
+                    boxShadow: {
+                        'soft': '0 8px 24px -4px rgba(42, 91, 79, 0.08)',
+                        'card': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
+                        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.07)',
+                        'floating': '0 16px 48px -12px rgba(42, 91, 79, 0.25)',
+                        'glow': '0 0 25px rgba(183, 240, 173, 0.6)',
+                        'inner-light': 'inset 0 2px 4px 0 rgba(255, 255, 255, 0.3)',
+                        'neumorphic': '20px 20px 60px #d1d9e6, -20px -20px 60px #ffffff'
+                    },
+                    backgroundImage: {
+                        'forest-gradient': 'linear-gradient(135deg, #2A5B4F 0%, #234E43 100%)',
+                        'glass-gradient': 'linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
+                        'radial-glow': 'radial-gradient(circle, rgba(183,240,173,0.15) 0%, rgba(255,255,255,0) 70%)'
+                    },
+                    borderRadius: {
+                        'xl': '16px',
+                        '2xl': '20px',
+                        '3xl': '24px',
+                        '4xl': '32px',
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'spin-slow': 'spin 12s linear infinite',
+                        'ping-slow': 'ping 2s cubic-bezier(0, 0, 0.2, 1) infinite',
+                        'shake': 'shake 0.5s cubic-bezier(.36,.07,.19,.97) both',
+                        'success-pop': 'pop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        },
+                        shake: {
+                            '10%, 90%': { transform: 'translate3d(-1px, 0, 0)' },
+                            '20%, 80%': { transform: 'translate3d(2px, 0, 0)' },
+                            '30%, 50%, 70%': { transform: 'translate3d(-4px, 0, 0)' },
+                            '40%, 60%': { transform: 'translate3d(4px, 0, 0)' }
+                        },
+                        pop: {
+                            '0%': { transform: 'scale(0.8)', opacity: '0' },
+                            '100%': { transform: 'scale(1)', opacity: '1' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #F0F2F5;
+            -webkit-font-smoothing: antialiased;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        /* Hide scrollbar but keep functionality */
+        ::-webkit-scrollbar {
+            width: 0px;
+            background: transparent;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .safe-top {
+            padding-top: max(env(safe-area-inset-top), 20px);
+        }
+        
+        .safe-bottom {
+            padding-bottom: max(env(safe-area-inset-bottom), 20px);
+        }
+
+        /* Circular Progress styling */
+        .progress-ring__circle {
+            transition: stroke-dashoffset 0.35s;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+
+        /* Glassmorphism utilities */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        /* PIN Input Styles */
+        .pin-input:focus {
+            outline: none;
+            border-color: #2A5B4F;
+            box-shadow: 0 0 0 4px rgba(42, 91, 79, 0.1);
+        }
+
+        /* Hold-to-clock animation */
+        @keyframes fill-ring {
+            0% { stroke-dashoffset: 440; }
+            100% { stroke-dashoffset: 0; }
+        }
+        
+        .animate-fill {
+            animation: fill-ring 1.5s linear forwards;
+        }
+    </style>
+</head>
+<body class="bg-[#F0F2F5] min-h-screen flex items-center justify-center p-4 sm:p-8 overflow-x-hidden">
+
+    <!-- Mobile Frame Container -->
+    <main id="clock-in-container" class="relative w-full max-w-[430px] h-[min(880px,90vh)] bg-[#F8F9FA] sm:rounded-[36px] shadow-2xl overflow-hidden flex flex-col z-10 border-[6px] border-gray-900/5">
+        
+        <!-- Offline/Sync Status Banner (Initially Hidden) -->
+        <div id="offline-banner" class="absolute top-0 left-0 w-full bg-orange-100 text-orange-800 text-[10px] font-bold py-1 px-4 text-center z-[60] transform -translate-y-full transition-transform duration-300 flex items-center justify-center gap-2">
+            <i class="fa-solid fa-wifi-slash"></i>
+            <span>Offline Mode • Changes will sync automatically</span>
+        </div>
+
+        <!-- Header Section -->
+        <header id="header" class="relative z-30 bg-primary pt-safe-top pb-6 overflow-hidden rounded-b-[32px] shadow-soft shrink-0 transition-all duration-300">
+            <!-- Background Gradient & Decor -->
+            <div class="absolute inset-0 bg-forest-gradient"></div>
+            <!-- Decorative circles -->
+            <div class="absolute top-0 right-0 w-64 h-64 bg-[#B7F0AD] rounded-full blur-3xl opacity-10 pointer-events-none transform translate-x-1/2 -translate-y-1/2"></div>
+            <div class="absolute bottom-0 left-0 w-48 h-48 bg-[#3D7A6B] rounded-full blur-2xl opacity-20 pointer-events-none transform -translate-x-1/3 translate-y-1/3"></div>
+            
+            <!-- Header Content -->
+            <div class="relative px-5 pt-4 flex justify-between items-start">
+                <button class="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-95">
+                    <i class="fa-solid fa-arrow-left text-lg"></i>
+                </button>
+                
+                <div class="flex flex-col items-center pt-1">
+                    <span class="text-secondary font-bold text-[10px] tracking-widest uppercase mb-1">Current Job</span>
+                    <h1 class="text-xl font-extrabold text-white tracking-tight">Deep Clean</h1>
+                    <div class="flex items-center gap-1.5 mt-1">
+                        <div class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></div>
+                        <span class="text-white/80 text-xs font-medium">Ready to start</span>
+                    </div>
+                </div>
+
+                <button class="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-95 relative">
+                    <i class="fa-solid fa-bell text-lg"></i>
+                    <span class="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border border-primary"></span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <div class="flex-1 overflow-y-auto px-4 pt-4 pb-28 bg-[#F8F9FA] scroll-smooth no-scrollbar flex flex-col items-center" id="scroll-container">
+            
+            <!-- 1. Job Essentials Card (Top Priority) -->
+            <section id="job-essentials" class="w-full bg-white rounded-2xl p-5 shadow-card border border-gray-100 mb-6 relative overflow-hidden group">
+                <div class="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-secondary/20 to-transparent rounded-bl-full -mr-8 -mt-8 pointer-events-none"></div>
+                
+                <!-- Client & Location -->
+                <div class="flex items-start gap-4 mb-5">
+                    <div class="w-14 h-14 rounded-2xl bg-gray-100 shrink-0 overflow-hidden border border-gray-100 shadow-sm">
+                        <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-6.jpg" alt="Client" class="w-full h-full object-cover">
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h2 class="text-lg font-bold text-gray-900 truncate">Sarah Jenkins</h2>
+                        <div class="flex items-center gap-1.5 text-gray-500 mt-0.5">
+                            <i class="fa-solid fa-location-dot text-xs text-primary"></i>
+                            <p class="text-sm font-medium truncate">4209 Highland Park Dr</p>
+                        </div>
+                    </div>
+                    <button class="w-10 h-10 rounded-full bg-accent-surface text-primary border border-gray-100 flex items-center justify-center hover:bg-primary hover:text-white transition-colors shadow-sm">
+                        <i class="fa-solid fa-phone"></i>
+                    </button>
+                </div>
+
+                <!-- Gate Code Highlight (Critical) -->
+                <div class="bg-accent-bg rounded-xl p-4 border border-secondary/30 flex items-center justify-between active:scale-[0.98] transition-transform cursor-pointer" onclick="copyCode()">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-lg bg-white flex items-center justify-center text-primary shadow-sm border border-gray-100">
+                            <i class="fa-solid fa-key text-lg"></i>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Gate Code</span>
+                            <span class="text-2xl font-mono font-bold text-gray-900 tracking-widest">#4092</span>
+                        </div>
+                    </div>
+                    <div class="flex flex-col items-end">
+                        <span id="copy-text" class="text-[10px] font-bold text-primary/70 bg-white/50 px-2 py-1 rounded">Tap to copy</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. Theatrical Clock-In Section -->
+            <section id="clock-in-theater" class="w-full flex-1 flex flex-col items-center justify-center py-4 relative min-h-[360px]">
+                
+                <!-- Background Glow -->
+                <div class="absolute inset-0 bg-radial-glow pointer-events-none"></div>
+
+                <!-- Circular Progress Container -->
+                <div class="relative w-64 h-64 sm:w-72 sm:h-72 flex items-center justify-center mb-8">
+                    
+                    <!-- Outer Decorative Ring -->
+                    <div class="absolute inset-0 rounded-full border border-gray-100 shadow-inner"></div>
+                    <div class="absolute -inset-4 rounded-full border border-gray-50 opacity-50 animate-pulse-slow"></div>
+
+                    <!-- Progress SVG -->
+                    <svg class="progress-ring w-full h-full transform -rotate-90 drop-shadow-xl" viewBox="0 0 120 120">
+                        <!-- Track -->
+                        <circle
+                            class="text-gray-100"
+                            stroke-width="6"
+                            stroke="currentColor"
+                            fill="transparent"
+                            r="52"
+                            cx="60"
+                            cy="60"
+                        />
+                        <!-- Progress Indicator (Animated via JS/CSS) -->
+                        <circle
+                            id="progress-circle"
+                            class="text-secondary transition-all duration-300 ease-out"
+                            stroke-width="6"
+                            stroke-dasharray="326.72"
+                            stroke-dashoffset="326.72" 
+                            stroke-linecap="round"
+                            stroke="currentColor"
+                            fill="transparent"
+                            r="52"
+                            cx="60"
+                            cy="60"
+                        />
+                    </svg>
+
+                    <!-- Central Button Area -->
+                    <div class="absolute inset-4 rounded-full bg-white shadow-floating flex items-center justify-center z-10 overflow-hidden transition-all duration-300 transform" id="clock-btn-container">
+                        <!-- Standard State -->
+                        <button id="clock-in-btn" class="w-full h-full rounded-full bg-gradient-to-br from-primary to-primary-dark flex flex-col items-center justify-center text-white active:scale-95 transition-transform duration-100 relative overflow-hidden group outline-none focus:ring-4 focus:ring-secondary/50">
+                            <!-- Button Shine Effect -->
+                            <div class="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                            
+                            <div class="relative z-10 flex flex-col items-center transition-all duration-300" id="btn-content">
+                                <i class="fa-solid fa-fingerprint text-4xl mb-2 text-secondary group-hover:scale-110 transition-transform"></i>
+                                <span class="text-xl font-bold tracking-tight">Clock In</span>
+                                <span class="text-[10px] font-medium text-white/60 uppercase tracking-widest mt-1">Tap to start</span>
+                            </div>
+                            
+                            <!-- Success State (Hidden by default) -->
+                            <div id="success-state" class="absolute inset-0 flex flex-col items-center justify-center bg-success opacity-0 transform scale-75 transition-all duration-500">
+                                <i class="fa-solid fa-check text-5xl text-white mb-2 animate-bounce"></i>
+                                <span class="text-lg font-bold text-white">Clocked In!</span>
+                                <span class="text-xs text-white/80 font-mono mt-1" id="timestamp">08:47 AM</span>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- PIN Entry Modal/Overlay (Hidden initially) -->
+                <div id="pin-overlay" class="hidden absolute inset-0 z-20 flex flex-col items-center justify-center bg-[#F8F9FA]/95 backdrop-blur-sm rounded-3xl transition-all duration-300">
+                    <div class="w-full max-w-[280px] text-center">
+                        <h3 class="text-lg font-bold text-gray-900 mb-2">Enter PIN</h3>
+                        <p class="text-xs text-gray-500 mb-6">Confirm your identity to clock in</p>
+                        
+                        <!-- PIN Dots -->
+                        <div class="flex justify-center gap-4 mb-8" id="pin-display">
+                            <div class="w-4 h-4 rounded-full border-2 border-gray-300 bg-white transition-colors duration-200"></div>
+                            <div class="w-4 h-4 rounded-full border-2 border-gray-300 bg-white transition-colors duration-200"></div>
+                            <div class="w-4 h-4 rounded-full border-2 border-gray-300 bg-white transition-colors duration-200"></div>
+                            <div class="w-4 h-4 rounded-full border-2 border-gray-300 bg-white transition-colors duration-200"></div>
+                        </div>
+
+                        <!-- Numeric Keypad -->
+                        <div class="grid grid-cols-3 gap-4 mb-4">
+                            <button class="w-16 h-16 rounded-full bg-white shadow-sm border border-gray-100 text-xl font-bold text-gray-800 active:bg-gray-50 active:scale-95 transition-all keypad-btn" data-val="1">1</button>
+                            <button class="w-16 h-16 rounded-full bg-white shadow-sm border border-gray-100 text-xl font-bold text-gray-800 active:bg-gray-50 active:scale-95 transition-all keypad-btn" data-val="2">2</button>
+                            <button class="w-16 h-16 rounded-full bg-white shadow-sm border border-gray-100 text-xl font-bold text-gray-800 active:bg-gray-50 active:scale-95 transition-all keypad-btn" data-val="3">3</button>
+                            <button class="w-16 h-16 rounded-full bg-white shadow-sm border border-gray-100 text-xl font-bold text-gray-800 active:bg-gray-50 active:scale-95 transition-all keypad-btn" data-val="4">4</button>
+                            <button class="w-16 h-16 rounded-full bg-white shadow-sm border border-gray-100 text-xl font-bold text-gray-800 active:bg-gray-50 active:scale-95 transition-all keypad-btn" data-val="5">5</button>
+                            <button class="w-16 h-16 rounded-full bg-white shadow-sm border border-gray-100 text-xl font-bold text-gray-800 active:bg-gray-50 active:scale-95 transition-all keypad-btn" data-val="6">6</button>
+                            <button class="w-16 h-16 rounded-full bg-white shadow-sm border border-gray-100 text-xl font-bold text-gray-800 active:bg-gray-50 active:scale-95 transition-all keypad-btn" data-val="7">7</button>
+                            <button class="w-16 h-16 rounded-full bg-white shadow-sm border border-gray-100 text-xl font-bold text-gray-800 active:bg-gray-50 active:scale-95 transition-all keypad-btn" data-val="8">8</button>
+                            <button class="w-16 h-16 rounded-full bg-white shadow-sm border border-gray-100 text-xl font-bold text-gray-800 active:bg-gray-50 active:scale-95 transition-all keypad-btn" data-val="9">9</button>
+                            <div class="w-16 h-16"></div> <!-- Spacer -->
+                            <button class="w-16 h-16 rounded-full bg-white shadow-sm border border-gray-100 text-xl font-bold text-gray-800 active:bg-gray-50 active:scale-95 transition-all keypad-btn" data-val="0">0</button>
+                            <button class="w-16 h-16 rounded-full bg-transparent text-gray-400 active:text-gray-600 flex items-center justify-center transition-colors" id="backspace-btn">
+                                <i class="fa-solid fa-delete-left text-2xl"></i>
+                            </button>
+                        </div>
+                        
+                        <button id="cancel-pin" class="text-xs font-bold text-gray-400 uppercase tracking-widest mt-4 p-2 hover:text-gray-600">Cancel</button>
+                    </div>
+                </div>
+
+                <!-- Status Text Below -->
+                <div class="text-center transition-opacity duration-300" id="status-text-container">
+                    <p class="text-sm font-bold text-gray-900 mb-1">Confirm Arrival</p>
+                    <div class="flex items-center justify-center gap-2 text-xs text-gray-500">
+                        <i class="fa-solid fa-circle-check text-secondary"></i>
+                        <span>GPS Verified: On Site</span>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- 3. Offline Notice Banner (Bottom) -->
+            <div id="offline-toast" class="w-full bg-gray-900 text-white rounded-xl p-3 shadow-lg flex items-center justify-between transform translate-y-20 opacity-0 transition-all duration-500 absolute bottom-24 left-0 right-0 mx-auto max-w-[90%] z-50">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center">
+                        <i class="fa-solid fa-cloud-arrow-up text-secondary text-xs"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold">Saved Offline</p>
+                        <p class="text-[10px] text-gray-400">Will sync when online</p>
+                    </div>
+                </div>
+                <button class="text-gray-400 hover:text-white px-2">
+                    <i class="fa-solid fa-xmark text-xs"></i>
+                </button>
+            </div>
+
+        </div>
+
+        <!-- Floating Action Button (AI Copilot) -->
+        <button class="absolute bottom-24 right-5 w-14 h-14 bg-gradient-to-br from-primary to-primary-light rounded-full shadow-floating flex items-center justify-center text-white z-40 animate-float hover:scale-110 transition-transform active:scale-90 border-2 border-white/20">
+            <i class="fa-solid fa-sparkles text-xl"></i>
+        </button>
+
+        <!-- Bottom Navigation Bar -->
+        <nav id="footer" class="absolute bottom-0 w-full bg-white border-t border-gray-100 px-2 py-2 pb-safe-bottom z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.03)]">
+            <div class="flex justify-around items-center h-14">
+                <!-- Home -->
+                <button class="flex flex-col items-center justify-center w-16 h-full gap-1 text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fa-solid fa-house text-xl"></i>
+                    <span class="text-[10px] font-medium">Home</span>
+                </button>
+
+                <!-- Jobs (Active) -->
+                <button class="flex flex-col items-center justify-center w-16 h-full gap-1 text-primary">
+                    <div class="w-10 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
+                        <i class="fa-solid fa-briefcase text-lg"></i>
+                    </div>
+                    <span class="text-[10px] font-bold tracking-tight">Jobs</span>
+                </button>
+
+                <!-- Schedule -->
+                <button class="flex flex-col items-center justify-center w-16 h-full gap-1 text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fa-solid fa-calendar-day text-xl"></i>
+                    <span class="text-[10px] font-medium">Schedule</span>
+                </button>
+
+                <!-- Messages -->
+                <button class="flex flex-col items-center justify-center w-16 h-full gap-1 text-gray-400 hover:text-gray-600 transition-colors relative">
+                    <div class="relative">
+                        <i class="fa-solid fa-comment-dots text-xl"></i>
+                        <span class="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+                    </div>
+                    <span class="text-[10px] font-medium">Messages</span>
+                </button>
+
+                <!-- Menu -->
+                <button class="flex flex-col items-center justify-center w-16 h-full gap-1 text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fa-solid fa-grid-2 text-xl"></i>
+                    <span class="text-[10px] font-medium">Menu</span>
+                </button>
+            </div>
+        </nav>
+
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const clockBtn = document.getElementById('clock-in-btn');
+            const pinOverlay = document.getElementById('pin-overlay');
+            const progressCircle = document.getElementById('progress-circle');
+            const btnContent = document.getElementById('btn-content');
+            const successState = document.getElementById('success-state');
+            const cancelPin = document.getElementById('cancel-pin');
+            const pinDisplay = document.getElementById('pin-display');
+            const dots = pinDisplay.querySelectorAll('div');
+            const offlineToast = document.getElementById('offline-toast');
+            
+            // Progress Ring Setup
+            const radius = progressCircle.r.baseVal.value;
+            const circumference = radius * 2 * Math.PI;
+            progressCircle.style.strokeDasharray = `${circumference} ${circumference}`;
+            progressCircle.style.strokeDashoffset = circumference;
+
+            // PIN Logic
+            let pin = '';
+            const correctPin = '1234'; // Demo PIN
+
+            // 1. Clock In Click -> Show PIN
+            clockBtn.addEventListener('click', () => {
+                // Check if already clocked in
+                if (successState.style.opacity === '1') return;
+                
+                // Show PIN Overlay
+                pinOverlay.classList.remove('hidden');
+                // Small haptic visual
+                document.getElementById('clock-in-container').style.transform = 'scale(0.99)';
+                setTimeout(() => document.getElementById('clock-in-container').style.transform = 'scale(1)', 100);
+            });
+
+            // 2. Cancel PIN
+            cancelPin.addEventListener('click', () => {
+                pinOverlay.classList.add('hidden');
+                resetPin();
+            });
+
+            // 3. Keypad Interaction
+            document.querySelectorAll('.keypad-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    if (pin.length < 4) {
+                        const val = this.getAttribute('data-val');
+                        pin += val;
+                        updateDots();
+                        
+                        // Check if complete
+                        if (pin.length === 4) {
+                            setTimeout(validatePin, 200);
+                        }
+                    }
+                });
+            });
+
+            document.getElementById('backspace-btn').addEventListener('click', () => {
+                pin = pin.slice(0, -1);
+                updateDots();
+            });
+
+            function updateDots() {
+                dots.forEach((dot, index) => {
+                    if (index < pin.length) {
+                        dot.classList.remove('bg-white', 'border-gray-300');
+                        dot.classList.add('bg-primary', 'border-primary');
+                    } else {
+                        dot.classList.add('bg-white', 'border-gray-300');
+                        dot.classList.remove('bg-primary', 'border-primary');
+                    }
+                });
+            }
+
+            function resetPin() {
+                pin = '';
+                updateDots();
+            }
+
+            function validatePin() {
+                if (pin === correctPin || true) { // Always true for demo purposes unless user wants failure
+                    // Success!
+                    pinOverlay.classList.add('hidden');
+                    startClockInAnimation();
+                } else {
+                    // Shake animation for error
+                    const pinContainer = document.querySelector('#pin-overlay > div');
+                    pinContainer.classList.add('animate-shake');
+                    setTimeout(() => {
+                        pinContainer.classList.remove('animate-shake');
+                        resetPin();
+                    }, 500);
+                }
+            }
+
+            function startClockInAnimation() {
+                // 1. Fill Progress Ring
+                progressCircle.style.strokeDashoffset = 0;
+                
+                // 2. Button Transition
+                setTimeout(() => {
+                    btnContent.style.opacity = '0';
+                    btnContent.style.transform = 'scale(0.8)';
+                    
+                    setTimeout(() => {
+                        // 3. Show Success State
+                        successState.classList.remove('opacity-0', 'scale-75');
+                        successState.classList.add('animate-success-pop');
+                        
+                        // Set current time
+                        const now = new Date();
+                        document.getElementById('timestamp').innerText = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                        
+                        // 4. Show Offline Toast (Demo feature)
+                        setTimeout(() => {
+                            offlineToast.classList.remove('translate-y-20', 'opacity-0');
+                        }, 800);
+                        
+                    }, 300);
+                }, 400); // Wait for ring to fill slightly
+            }
+
+            // Copy to clipboard logic
+            window.copyCode = function() {
+                const text = document.getElementById('copy-text');
+                text.innerText = "Copied!";
+                text.classList.add('text-success');
+                setTimeout(() => {
+                    text.innerText = "Tap to copy";
+                    text.classList.remove('text-success');
+                }, 2000);
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Active Job - CleanerHQ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        window.FontAwesomeConfig = { autoReplaceSvg: 'nest' };
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            DEFAULT: '#2A5B4F', // Forest Teal
+                            dark: '#234E43',
+                            light: '#3D7A6B',
+                            glass: 'rgba(42, 91, 79, 0.95)'
+                        },
+                        secondary: {
+                            DEFAULT: '#B7F0AD', // Success/Accents
+                            dim: '#9AD690',
+                            light: '#E3F9DF'
+                        },
+                        accent: {
+                            bg: '#F0F7F2', // Card tints
+                            surface: '#F8F9FA',
+                            blue: '#DCEAF9',
+                            orange: '#F9EADC'
+                        },
+                        logo: '#5EBD6D',
+                        error: '#991B1B',
+                        warning: '#F59E0B',
+                        success: '#10B981',
+                        gray: {
+                            850: '#1F2937',
+                            950: '#0B1120'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
+                    },
+                    boxShadow: {
+                        'soft': '0 8px 24px -4px rgba(42, 91, 79, 0.08)',
+                        'card': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
+                        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.07)',
+                        'floating': '0 16px 48px -12px rgba(42, 91, 79, 0.25)',
+                        'glow': '0 0 25px rgba(183, 240, 173, 0.6)',
+                        'inner-light': 'inset 0 2px 4px 0 rgba(255, 255, 255, 0.3)',
+                    },
+                    backgroundImage: {
+                        'forest-gradient': 'linear-gradient(135deg, #2A5B4F 0%, #234E43 100%)',
+                        'glass-gradient': 'linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                        'slide-up': 'slideUp 0.3s ease-out forwards',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(100%)' },
+                            '100%': { transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #F0F2F5;
+            -webkit-font-smoothing: antialiased;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        ::-webkit-scrollbar { width: 0px; background: transparent; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .safe-top { padding-top: max(env(safe-area-inset-top), 20px); }
+        .safe-bottom { padding-bottom: max(env(safe-area-inset-bottom), 20px); }
+
+        /* Custom Checkbox Animation */
+        .checkbox-wrapper input:checked + div {
+            background-color: #2A5B4F;
+            border-color: #2A5B4F;
+        }
+        .checkbox-wrapper input:checked + div svg {
+            stroke-dashoffset: 0;
+        }
+        .checkbox-check {
+            stroke-dasharray: 24;
+            stroke-dashoffset: 24;
+            transition: stroke-dashoffset 0.4s cubic-bezier(0.65, 0, 0.45, 1) 0.1s;
+        }
+
+        /* Timer Pulse */
+        .timer-dot {
+            animation: blink 1s infinite;
+        }
+        @keyframes blink { 50% { opacity: 0; } }
+    </style>
+</head>
+<body class="bg-[#F0F2F5] min-h-screen flex items-center justify-center p-4 sm:p-8 overflow-x-hidden">
+
+    <!-- Mobile Frame Container -->
+    <main id="active-job-container" class="relative w-full max-w-[430px] h-[min(880px,90vh)] bg-[#F8F9FA] sm:rounded-[36px] shadow-2xl overflow-hidden flex flex-col z-10 border-[6px] border-gray-900/5">
+        
+        <!-- Offline/Sync Status Banner (Hidden by default) -->
+        <div id="offline-banner" class="absolute top-0 left-0 w-full bg-orange-100 text-orange-800 text-[10px] font-bold py-1 px-4 text-center z-[60] transform -translate-y-full transition-transform duration-300 flex items-center justify-center gap-2">
+            <i class="fa-solid fa-wifi-slash"></i>
+            <span>Offline Mode • Changes will sync automatically</span>
+        </div>
+
+        <!-- Header Section -->
+        <header id="header" class="relative z-30 bg-primary pt-safe-top pb-4 overflow-hidden rounded-b-[32px] shadow-soft shrink-0 transition-all duration-300">
+            <!-- Background Gradient & Decor -->
+            <div class="absolute inset-0 bg-forest-gradient"></div>
+            <div class="absolute top-0 right-0 w-64 h-64 bg-[#B7F0AD] rounded-full blur-3xl opacity-10 pointer-events-none transform translate-x-1/2 -translate-y-1/2"></div>
+            
+            <!-- Header Content -->
+            <div class="relative px-5 pt-2 flex justify-between items-center mb-4">
+                <button class="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-95">
+                    <i class="fa-solid fa-chevron-left text-sm"></i>
+                </button>
+                
+                <h1 class="text-lg font-bold text-white tracking-tight">Active Job</h1>
+
+                <button class="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-95">
+                    <i class="fa-solid fa-ellipsis-vertical text-sm"></i>
+                </button>
+            </div>
+
+            <!-- Timer Banner -->
+            <div class="relative px-5 pb-4">
+                <div class="bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-4 flex items-center justify-between">
+                    <div class="flex flex-col">
+                        <span class="text-secondary text-[10px] font-bold uppercase tracking-widest mb-1">Elapsed Time</span>
+                        <div class="text-4xl font-mono font-bold text-white tracking-tight flex items-baseline">
+                            <span id="timer-hours">00</span><span class="timer-dot">:</span><span id="timer-minutes">42</span><span class="timer-dot">:</span><span id="timer-seconds" class="text-2xl text-white/70">18</span>
+                        </div>
+                    </div>
+                    <button id="pause-btn" class="w-12 h-12 rounded-full bg-white text-primary flex items-center justify-center shadow-lg active:scale-95 transition-transform">
+                        <i class="fa-solid fa-pause text-lg"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <div class="flex-1 overflow-y-auto bg-[#F8F9FA] scroll-smooth no-scrollbar flex flex-col pb-44" id="scroll-container">
+            
+            <!-- Quick Actions Bar (Horizontal Scroll) -->
+            <div class="z-20 bg-[#F8F9FA] px-5 py-4 border-b border-gray-100/50">
+                <div class="flex gap-3 overflow-x-auto no-scrollbar pb-1">
+                    <button class="flex items-center gap-2 px-4 py-2.5 bg-white rounded-full shadow-sm border border-gray-100 shrink-0 active:scale-95 transition-transform">
+                        <i class="fa-solid fa-camera text-primary"></i>
+                        <span class="text-sm font-bold text-gray-700">Add Photo</span>
+                    </button>
+                    <button class="flex items-center gap-2 px-4 py-2.5 bg-white rounded-full shadow-sm border border-gray-100 shrink-0 active:scale-95 transition-transform">
+                        <i class="fa-solid fa-note-sticky text-primary"></i>
+                        <span class="text-sm font-bold text-gray-700">Add Note</span>
+                    </button>
+                    <button class="flex items-center gap-2 px-4 py-2.5 bg-white rounded-full shadow-sm border border-gray-100 shrink-0 active:scale-95 transition-transform">
+                        <i class="fa-solid fa-flag text-error"></i>
+                        <span class="text-sm font-bold text-gray-700">Report Issue</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Checklist Section -->
+            <div class="px-5 mt-2">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-bold text-gray-900">Task Checklist</h2>
+                    <span class="text-xs font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-lg">3/12 Completed</span>
+                </div>
+
+                <!-- Room Group: Kitchen -->
+                <div class="mb-6">
+                    <div class="flex items-center gap-2 mb-3 px-1">
+                        <i class="fa-solid fa-utensils text-gray-400 text-xs"></i>
+                        <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Kitchen</h3>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <!-- Checked Item -->
+                        <label class="checkbox-wrapper w-full bg-white p-4 rounded-xl shadow-card border border-gray-100 flex items-start gap-4 cursor-pointer active:scale-[0.99] transition-transform">
+                            <input type="checkbox" checked class="hidden peer">
+                            <div class="w-6 h-6 rounded-lg border-2 border-gray-300 flex items-center justify-center shrink-0 transition-colors duration-300">
+                                <svg class="w-3.5 h-3.5 text-white pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                    <path class="checkbox-check" stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                            <div class="flex-1 pt-0.5">
+                                <span class="text-base font-semibold text-gray-400 line-through decoration-gray-300 block">Wipe countertops & backsplash</span>
+                            </div>
+                        </label>
+
+                        <!-- Checked Item -->
+                        <label class="checkbox-wrapper w-full bg-white p-4 rounded-xl shadow-card border border-gray-100 flex items-start gap-4 cursor-pointer active:scale-[0.99] transition-transform">
+                            <input type="checkbox" checked class="hidden peer">
+                            <div class="w-6 h-6 rounded-lg border-2 border-gray-300 flex items-center justify-center shrink-0 transition-colors duration-300">
+                                <svg class="w-3.5 h-3.5 text-white pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                    <path class="checkbox-check" stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                            <div class="flex-1 pt-0.5">
+                                <span class="text-base font-semibold text-gray-400 line-through decoration-gray-300 block">Clean sink & polish faucet</span>
+                            </div>
+                        </label>
+
+                        <!-- Active Item -->
+                        <label class="checkbox-wrapper w-full bg-white p-4 rounded-xl shadow-card border border-gray-100 flex items-start gap-4 cursor-pointer active:scale-[0.99] transition-transform">
+                            <input type="checkbox" class="hidden peer">
+                            <div class="w-6 h-6 rounded-lg border-2 border-gray-300 flex items-center justify-center shrink-0 transition-colors duration-300">
+                                <svg class="w-3.5 h-3.5 text-white pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                    <path class="checkbox-check" stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                            <div class="flex-1 pt-0.5">
+                                <span class="text-base font-bold text-gray-900 block">Clean microwave interior</span>
+                                <p class="text-xs text-gray-500 mt-1">Use degreaser if needed</p>
+                            </div>
+                        </label>
+
+                        <!-- Active Item with Photo Request -->
+                        <label class="checkbox-wrapper w-full bg-white p-4 rounded-xl shadow-card border border-gray-100 flex items-start gap-4 cursor-pointer active:scale-[0.99] transition-transform ring-1 ring-primary/10">
+                            <input type="checkbox" class="hidden peer">
+                            <div class="w-6 h-6 rounded-lg border-2 border-gray-300 flex items-center justify-center shrink-0 transition-colors duration-300">
+                                <svg class="w-3.5 h-3.5 text-white pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                    <path class="checkbox-check" stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                            <div class="flex-1 pt-0.5">
+                                <span class="text-base font-bold text-gray-900 block">Empty trash & replace liner</span>
+                                <div class="mt-2 flex gap-2">
+                                    <span class="inline-flex items-center gap-1 px-2 py-1 rounded bg-orange-50 text-orange-700 text-[10px] font-bold uppercase tracking-wide border border-orange-100">
+                                        <i class="fa-solid fa-camera"></i> Photo Required
+                                    </span>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Room Group: Living Room -->
+                <div class="mb-6">
+                    <div class="flex items-center gap-2 mb-3 px-1">
+                        <i class="fa-solid fa-couch text-gray-400 text-xs"></i>
+                        <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Living Room</h3>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <label class="checkbox-wrapper w-full bg-white p-4 rounded-xl shadow-card border border-gray-100 flex items-start gap-4 cursor-pointer active:scale-[0.99] transition-transform">
+                            <input type="checkbox" class="hidden peer">
+                            <div class="w-6 h-6 rounded-lg border-2 border-gray-300 flex items-center justify-center shrink-0 transition-colors duration-300">
+                                <svg class="w-3.5 h-3.5 text-white pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                    <path class="checkbox-check" stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                            <div class="flex-1 pt-0.5">
+                                <span class="text-base font-bold text-gray-900 block">Dust all surfaces & shelves</span>
+                            </div>
+                        </label>
+                        
+                        <label class="checkbox-wrapper w-full bg-white p-4 rounded-xl shadow-card border border-gray-100 flex items-start gap-4 cursor-pointer active:scale-[0.99] transition-transform">
+                            <input type="checkbox" class="hidden peer">
+                            <div class="w-6 h-6 rounded-lg border-2 border-gray-300 flex items-center justify-center shrink-0 transition-colors duration-300">
+                                <svg class="w-3.5 h-3.5 text-white pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                    <path class="checkbox-check" stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                            <div class="flex-1 pt-0.5">
+                                <span class="text-base font-bold text-gray-900 block">Vacuum carpet / rugs</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Room Group: Master Bath -->
+                <div class="mb-6">
+                    <div class="flex items-center gap-2 mb-3 px-1">
+                        <i class="fa-solid fa-bath text-gray-400 text-xs"></i>
+                        <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Master Bath</h3>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <label class="checkbox-wrapper w-full bg-white p-4 rounded-xl shadow-card border border-gray-100 flex items-start gap-4 cursor-pointer active:scale-[0.99] transition-transform">
+                            <input type="checkbox" class="hidden peer">
+                            <div class="w-6 h-6 rounded-lg border-2 border-gray-300 flex items-center justify-center shrink-0 transition-colors duration-300">
+                                <svg class="w-3.5 h-3.5 text-white pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                    <path class="checkbox-check" stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                            <div class="flex-1 pt-0.5">
+                                <span class="text-base font-bold text-gray-900 block">Scrub shower & glass door</span>
+                            </div>
+                        </label>
+                        <label class="checkbox-wrapper w-full bg-white p-4 rounded-xl shadow-card border border-gray-100 flex items-start gap-4 cursor-pointer active:scale-[0.99] transition-transform">
+                            <input type="checkbox" class="hidden peer">
+                            <div class="w-6 h-6 rounded-lg border-2 border-gray-300 flex items-center justify-center shrink-0 transition-colors duration-300">
+                                <svg class="w-3.5 h-3.5 text-white pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                    <path class="checkbox-check" stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                            <div class="flex-1 pt-0.5">
+                                <span class="text-base font-bold text-gray-900 block">Clean toilet (inside & out)</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Bottom Spacer for Floating Controls -->
+            <div class="h-24"></div>
+
+        </div>
+
+        <!-- Floating Action Button (AI Copilot) -->
+        <button class="absolute bottom-48 right-5 w-14 h-14 bg-gradient-to-br from-primary to-primary-light rounded-full shadow-floating flex items-center justify-center text-white z-40 animate-float hover:scale-110 transition-transform active:scale-90 border-2 border-white/20">
+            <i class="fa-solid fa-sparkles text-xl"></i>
+        </button>
+
+        <!-- Bottom Controls (Clock Out) -->
+        <div class="absolute bottom-16 left-0 w-full bg-white/95 backdrop-blur-md border-t border-gray-100 pb-4 pt-4 px-5 z-40 flex flex-col gap-3">
+            
+            <!-- Sync Status (Tiny) -->
+            <div class="flex justify-center items-center gap-1.5 mb-1 opacity-60">
+                <div class="w-1.5 h-1.5 rounded-full bg-green-500"></div>
+                <span class="text-[10px] font-medium text-gray-500 uppercase tracking-wide">Synced 1m ago</span>
+            </div>
+
+            <button id="clock-out-btn" class="w-full h-14 bg-gray-900 hover:bg-gray-800 text-white rounded-2xl font-bold text-lg shadow-xl active:scale-[0.98] transition-all flex items-center justify-center gap-3 relative overflow-hidden group">
+                <div class="absolute inset-0 bg-white/5 translate-y-full group-hover:translate-y-0 transition-transform"></div>
+                <i class="fa-solid fa-right-from-bracket"></i>
+                <span>Clock Out</span>
+            </button>
+        </div>
+
+        <!-- Bottom Navigation Bar -->
+        <nav id="footer" class="absolute bottom-0 w-full bg-white border-t border-gray-100 px-2 py-2 pb-safe-bottom z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.03)]">
+            <div class="flex justify-around items-center h-14">
+                <!-- Home -->
+                <button class="flex flex-col items-center justify-center w-16 h-full gap-1 text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fa-solid fa-house text-xl"></i>
+                    <span class="text-[10px] font-medium">Home</span>
+                </button>
+
+                <!-- Jobs (Active) -->
+                <button class="flex flex-col items-center justify-center w-16 h-full gap-1 text-primary">
+                    <div class="w-10 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
+                        <i class="fa-solid fa-briefcase text-lg"></i>
+                    </div>
+                    <span class="text-[10px] font-bold tracking-tight">Jobs</span>
+                </button>
+
+                <!-- Schedule -->
+                <button class="flex flex-col items-center justify-center w-16 h-full gap-1 text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fa-solid fa-calendar-day text-xl"></i>
+                    <span class="text-[10px] font-medium">Schedule</span>
+                </button>
+
+                <!-- Messages -->
+                <button class="flex flex-col items-center justify-center w-16 h-full gap-1 text-gray-400 hover:text-gray-600 transition-colors relative">
+                    <div class="relative">
+                        <i class="fa-solid fa-comment-dots text-xl"></i>
+                        <span class="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+                    </div>
+                    <span class="text-[10px] font-medium">Messages</span>
+                </button>
+
+                <!-- Menu -->
+                <button class="flex flex-col items-center justify-center w-16 h-full gap-1 text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fa-solid fa-grid-2 text-xl"></i>
+                    <span class="text-[10px] font-medium">Menu</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Pause Modal (Hidden) -->
+        <div id="pause-modal" class="hidden absolute inset-0 z-[70] bg-gray-900/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
+            <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-slide-up">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold text-gray-900">Pause Job?</h3>
+                    <button id="close-pause-modal" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500">
+                        <i class="fa-solid fa-times"></i>
+                    </button>
+                </div>
+                <div class="space-y-3 mb-6">
+                    <button class="w-full p-4 rounded-xl border border-gray-200 flex items-center gap-3 hover:bg-gray-50 transition-colors">
+                        <div class="w-10 h-10 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center">
+                            <i class="fa-solid fa-mug-hot"></i>
+                        </div>
+                        <div class="text-left">
+                            <span class="block font-bold text-gray-800">Lunch Break</span>
+                            <span class="text-xs text-gray-500">30 min unpaid</span>
+                        </div>
+                    </button>
+                    <button class="w-full p-4 rounded-xl border border-gray-200 flex items-center gap-3 hover:bg-gray-50 transition-colors">
+                        <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">
+                            <i class="fa-solid fa-road"></i>
+                        </div>
+                        <div class="text-left">
+                            <span class="block font-bold text-gray-800">Travel / Supply Run</span>
+                            <span class="text-xs text-gray-500">Clocked travel time</span>
+                        </div>
+                    </button>
+                </div>
+                <button class="w-full py-4 bg-primary text-white font-bold rounded-xl shadow-lg">Confirm Pause</button>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Timer Logic
+            let seconds = 18;
+            let minutes = 42;
+            let hours = 0;
+            
+            function updateTimer() {
+                seconds++;
+                if (seconds >= 60) {
+                    seconds = 0;
+                    minutes++;
+                    if (minutes >= 60) {
+                        minutes = 0;
+                        hours++;
+                    }
+                }
+                
+                document.getElementById('timer-seconds').innerText = seconds.toString().padStart(2, '0');
+                document.getElementById('timer-minutes').innerText = minutes.toString().padStart(2, '0');
+                document.getElementById('timer-hours').innerText = hours.toString().padStart(2, '0');
+            }
+            
+            setInterval(updateTimer, 1000);
+
+            // Modal Logic
+            const pauseBtn = document.getElementById('pause-btn');
+            const pauseModal = document.getElementById('pause-modal');
+            const closePauseModal = document.getElementById('close-pause-modal');
+
+            pauseBtn.addEventListener('click', () => {
+                pauseModal.classList.remove('hidden');
+            });
+
+            closePauseModal.addEventListener('click', () => {
+                pauseModal.classList.add('hidden');
+            });
+
+            pauseModal.addEventListener('click', (e) => {
+                if(e.target === pauseModal) {
+                    pauseModal.classList.add('hidden');
+                }
+            });
+
+            // Clock Out Button (Demo Interaction)
+            const clockOutBtn = document.getElementById('clock-out-btn');
+            clockOutBtn.addEventListener('click', () => {
+                if(confirm("Are you sure you want to clock out? Ensure checklist is complete.")) {
+                    // In a real app, this would navigate or submit data
+                    clockOutBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Syncing...';
+                    setTimeout(() => {
+                        alert("Clocked out successfully!");
+                        window.location.reload(); // Reset demo
+                    }, 1500);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

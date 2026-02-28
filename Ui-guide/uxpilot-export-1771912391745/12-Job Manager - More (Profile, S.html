@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>More & Settings - CleanerHQ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        window.FontAwesomeConfig = { autoReplaceSvg: 'nest' };
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            DEFAULT: '#2A5B4F', // Forest Teal
+                            dark: '#234E43',
+                            light: '#3D7A6B',
+                            glass: 'rgba(42, 91, 79, 0.95)'
+                        },
+                        secondary: {
+                            DEFAULT: '#B7F0AD', // Success/Accents
+                            dim: '#9AD690',
+                            light: '#E3F9DF'
+                        },
+                        accent: {
+                            bg: '#F0F7F2', // Card tints
+                            surface: '#F8F9FA',
+                            blue: '#DCEAF9',
+                            orange: '#F9EADC'
+                        },
+                        logo: '#5EBD6D',
+                        error: '#991B1B',
+                        warning: '#F59E0B',
+                        success: '#10B981',
+                        gray: {
+                            50: '#F9FAFB',
+                            100: '#F3F4F6',
+                            200: '#E5E7EB',
+                            300: '#D1D5DB',
+                            400: '#9CA3AF',
+                            500: '#6B7280',
+                            600: '#4B5563',
+                            700: '#374151',
+                            800: '#1F2937',
+                            850: '#1F2937',
+                            900: '#111827',
+                            950: '#0B1120'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
+                    },
+                    boxShadow: {
+                        'soft': '0 8px 24px -4px rgba(42, 91, 79, 0.08)',
+                        'card': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
+                        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.07)',
+                        'floating': '0 16px 48px -12px rgba(42, 91, 79, 0.25)',
+                        'glow': '0 0 25px rgba(183, 240, 173, 0.6)',
+                        'inner-light': 'inset 0 2px 4px 0 rgba(255, 255, 255, 0.3)',
+                    },
+                    backgroundImage: {
+                        'forest-gradient': 'linear-gradient(135deg, #2A5B4F 0%, #234E43 100%)',
+                        'glass-gradient': 'linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
+                        'copilot-gradient': 'linear-gradient(135deg, #2A5B4F 0%, #10B981 100%)',
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                        'slide-up': 'slideUp 0.3s ease-out forwards',
+                        'wave': 'wave 1.5s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(100%)' },
+                            '100%': { transform: 'translateY(0)' },
+                        },
+                        wave: {
+                            '0%, 100%': { height: '10px' },
+                            '50%': { height: '24px' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #F0F2F5;
+            -webkit-font-smoothing: antialiased;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        ::-webkit-scrollbar { width: 0px; background: transparent; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .safe-top { padding-top: max(env(safe-area-inset-top), 20px); }
+        .safe-bottom { padding-bottom: max(env(safe-area-inset-bottom), 20px); }
+
+        /* Toggle Switch */
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #2A5B4F;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #2A5B4F;
+        }
+        
+        /* Waveform Bars */
+        .wave-bar {
+            width: 4px;
+            background: #B7F0AD;
+            border-radius: 99px;
+            animation: wave 1s ease-in-out infinite;
+        }
+        .wave-bar:nth-child(2) { animation-delay: 0.1s; height: 15px; }
+        .wave-bar:nth-child(3) { animation-delay: 0.2s; height: 20px; }
+        .wave-bar:nth-child(4) { animation-delay: 0.3s; height: 12px; }
+        .wave-bar:nth-child(5) { animation-delay: 0.4s; height: 18px; }
+    </style>
+</head>
+<body class="bg-[#F0F2F5] min-h-screen flex items-center justify-center p-4 sm:p-8 overflow-x-hidden">
+
+    <!-- Mobile Frame Container -->
+    <main id="more-container" class="relative w-full max-w-[430px] h-[min(880px,90vh)] bg-[#F8F9FA] sm:rounded-[36px] shadow-2xl overflow-hidden flex flex-col z-10 border-[6px] border-gray-900/5">
+        
+        <!-- Offline/Sync Status Banner (Hidden by default) -->
+        <div id="offline-banner" class="absolute top-0 left-0 w-full bg-orange-100 text-orange-800 text-[10px] font-bold py-1 px-4 text-center z-[60] transform -translate-y-full transition-transform duration-300 flex items-center justify-center gap-2">
+            <i class="fa-solid fa-wifi-slash"></i>
+            <span>Offline Mode • Some features limited</span>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="flex-1 overflow-y-auto bg-[#F8F9FA] scroll-smooth no-scrollbar flex flex-col pb-24" id="scroll-container">
+            
+            <!-- Header Section -->
+            <header class="relative z-30 bg-primary pt-safe-top pb-6 overflow-hidden rounded-b-[32px] shadow-soft shrink-0">
+                <!-- Background Gradient & Decor -->
+                <div class="absolute inset-0 bg-forest-gradient"></div>
+                <div class="absolute top-0 right-0 w-64 h-64 bg-[#B7F0AD] rounded-full blur-3xl opacity-10 pointer-events-none transform translate-x-1/2 -translate-y-1/2"></div>
+                <!-- Logo Watermark -->
+                <div class="absolute -bottom-6 -right-6 text-white opacity-5 text-8xl rotate-12 pointer-events-none">
+                    <i class="fa-solid fa-leaf"></i>
+                </div>
+                
+                <!-- Header Content -->
+                <div class="relative px-6 pt-4 flex justify-between items-start mb-6">
+                    <div>
+                        <h1 class="text-2xl font-bold text-white tracking-tight">More</h1>
+                        <p class="text-white/70 text-sm font-medium">Tools & Settings</p>
+                    </div>
+                    <div class="relative">
+                        <button class="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-95 relative">
+                            <i class="fa-regular fa-bell"></i>
+                            <span class="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border border-[#2A5B4F]"></span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Profile Card Summary -->
+                <div class="relative px-6">
+                    <div class="bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-4 flex items-center gap-4 transition-all hover:bg-white/15 cursor-pointer group">
+                        <div class="relative">
+                            <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-2.jpg" alt="Profile" class="w-14 h-14 rounded-full border-2 border-white/20 object-cover shadow-sm">
+                            <div class="absolute bottom-0 right-0 w-4 h-4 bg-secondary rounded-full border-2 border-[#2A5B4F]"></div>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h2 class="text-white font-bold text-lg truncate flex items-center gap-2">
+                                David Miller
+                                <span class="bg-white/20 text-[10px] px-1.5 py-0.5 rounded text-white font-medium uppercase tracking-wider">Owner</span>
+                            </h2>
+                            <p class="text-white/70 text-xs truncate">PureClean Services LLC</p>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-white/40 group-hover:text-white/80 transition-colors"></i>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Quick Actions Grid -->
+            <section class="px-5 -mt-4 relative z-40">
+                <div class="grid grid-cols-2 gap-3">
+                    <!-- SOS Button (Discreet) -->
+                    <button id="sos-trigger" class="bg-white p-4 rounded-2xl shadow-card border border-gray-100 flex flex-col items-start gap-3 active:scale-[0.98] transition-all group hover:bg-gray-50">
+                        <div class="w-10 h-10 rounded-xl bg-gray-100 text-gray-400 flex items-center justify-center">
+                            <i class="fa-solid fa-shield-heart text-lg"></i>
+                        </div>
+                        <div class="text-left">
+                            <h3 class="font-bold text-gray-700 text-sm">Safety Check</h3>
+                            <p class="text-[10px] text-gray-400 font-medium mt-0.5">Silent verification</p>
+                        </div>
+                    </button>
+
+                    <!-- AI Copilot Entry -->
+                    <button id="copilot-trigger" class="bg-gradient-to-br from-gray-900 to-gray-800 p-4 rounded-2xl shadow-card flex flex-col items-start gap-3 active:scale-[0.98] transition-all group relative overflow-hidden">
+                        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+                        <div class="absolute -right-2 -top-2 w-20 h-20 bg-secondary/20 blur-xl rounded-full"></div>
+                        
+                        <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center relative z-10 backdrop-blur-sm border border-white/10">
+                            <i class="fa-solid fa-sparkles text-secondary text-lg"></i>
+                        </div>
+                        <div class="text-left relative z-10 w-full">
+                            <div class="flex justify-between items-center">
+                                <h3 class="font-bold text-white text-sm">AI Copilot</h3>
+                                <span class="flex h-2 w-2 relative">
+                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span>
+                                    <span class="relative inline-flex rounded-full h-2 w-2 bg-secondary"></span>
+                                </span>
+                            </div>
+                            <p class="text-[10px] text-gray-400 font-medium mt-0.5">Ask anything...</p>
+                        </div>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Business Management Section (Owner Only) -->
+            <section class="mt-6 px-5">
+                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 px-1">Business Management</h3>
+                <div class="bg-white rounded-2xl shadow-card border border-gray-100 overflow-hidden">
+                    
+                    <!-- Earnings & Payroll -->
+                    <div class="p-4 flex items-center gap-4 border-b border-gray-50 active:bg-gray-50 transition-colors cursor-pointer group">
+                        <div class="w-10 h-10 rounded-full bg-green-50 text-green-600 flex items-center justify-center group-hover:bg-green-100 transition-colors">
+                            <i class="fa-solid fa-sack-dollar"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="text-sm font-bold text-gray-900">Earnings & Payroll</h4>
+                            <p class="text-xs text-gray-500">View pay stubs and history</p>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-gray-300 text-xs"></i>
+                    </div>
+
+                    <!-- Expense Approvals (With Badge) -->
+                    <div class="p-4 flex items-center gap-4 border-b border-gray-50 active:bg-gray-50 transition-colors cursor-pointer group">
+                        <div class="w-10 h-10 rounded-full bg-orange-50 text-orange-600 flex items-center justify-center group-hover:bg-orange-100 transition-colors">
+                            <i class="fa-solid fa-receipt"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2">
+                                <h4 class="text-sm font-bold text-gray-900">Expense Approvals</h4>
+                                <span class="bg-orange-100 text-orange-700 text-[10px] font-bold px-1.5 py-0.5 rounded-md">3 Pending</span>
+                            </div>
+                            <p class="text-xs text-gray-500">Review team submissions</p>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-gray-300 text-xs"></i>
+                    </div>
+
+                    <!-- Equipment Checkout -->
+                    <div class="p-4 flex items-center gap-4 active:bg-gray-50 transition-colors cursor-pointer group">
+                        <div class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
+                            <i class="fa-solid fa-toolbox"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="text-sm font-bold text-gray-900">Equipment Checkout</h4>
+                            <p class="text-xs text-gray-500">Manage inventory assignments</p>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-gray-300 text-xs"></i>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- Staff Management Section -->
+            <section class="mt-6 px-5">
+                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 px-1">Staff & Schedule</h3>
+                <div class="bg-white rounded-2xl shadow-card border border-gray-100 overflow-hidden">
+                    
+                    <!-- Availability Management -->
+                    <div class="p-4 flex items-center gap-4 border-b border-gray-50 active:bg-gray-50 transition-colors cursor-pointer group">
+                        <div class="w-10 h-10 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center group-hover:bg-purple-100 transition-colors">
+                            <i class="fa-regular fa-calendar-check"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="text-sm font-bold text-gray-900">Availability</h4>
+                            <p class="text-xs text-gray-500">Set working hours & time off</p>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-gray-300 text-xs"></i>
+                    </div>
+
+                    <!-- Team Directory -->
+                    <div class="p-4 flex items-center gap-4 active:bg-gray-50 transition-colors cursor-pointer group">
+                        <div class="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:bg-indigo-100 transition-colors">
+                            <i class="fa-solid fa-users-viewfinder"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="text-sm font-bold text-gray-900">Team Directory</h4>
+                            <p class="text-xs text-gray-500">Contacts and roles</p>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-gray-300 text-xs"></i>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- Preferences & Support Section -->
+            <section class="mt-6 px-5">
+                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 px-1">App Settings</h3>
+                <div class="bg-white rounded-2xl shadow-card border border-gray-100 overflow-hidden">
+                    
+                    <!-- Notification Preferences -->
+                    <div class="p-4 flex items-center gap-4 border-b border-gray-50 active:bg-gray-50 transition-colors cursor-pointer group">
+                        <div class="w-10 h-10 rounded-full bg-gray-50 text-gray-600 flex items-center justify-center group-hover:bg-gray-100 transition-colors">
+                            <i class="fa-regular fa-bell"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="text-sm font-bold text-gray-900">Notifications</h4>
+                            <p class="text-xs text-gray-500">Push, email & SMS alerts</p>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-gray-300 text-xs"></i>
+                    </div>
+
+                    <!-- Offline Data -->
+                    <div class="p-4 flex items-center gap-4 border-b border-gray-50 active:bg-gray-50 transition-colors cursor-pointer group">
+                        <div class="w-10 h-10 rounded-full bg-gray-50 text-gray-600 flex items-center justify-center group-hover:bg-gray-100 transition-colors">
+                            <i class="fa-solid fa-cloud-arrow-down"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="text-sm font-bold text-gray-900">Offline Data</h4>
+                            <p class="text-xs text-gray-500">Last synced: 2 mins ago</p>
+                        </div>
+                        <div class="text-green-500 text-xs font-bold mr-2">Synced</div>
+                        <i class="fa-solid fa-chevron-right text-gray-300 text-xs"></i>
+                    </div>
+
+                    <!-- Help & Support -->
+                    <div class="p-4 flex items-center gap-4 active:bg-gray-50 transition-colors cursor-pointer group">
+                        <div class="w-10 h-10 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center group-hover:bg-teal-100 transition-colors">
+                            <i class="fa-solid fa-circle-question"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="text-sm font-bold text-gray-900">Help & Support</h4>
+                            <p class="text-xs text-gray-500">FAQs and support chat</p>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-gray-300 text-xs"></i>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- Version Info & Logout -->
+            <div class="mt-8 mb-6 text-center px-5">
+                <button class="text-red-600 font-bold text-sm py-2 px-4 rounded-lg hover:bg-red-50 transition-colors w-full mb-4 border border-transparent hover:border-red-100">
+                    Log Out
+                </button>
+                <p class="text-[10px] text-gray-400">CleanerHQ v2.0.0 (Build 482)</p>
+                <p class="text-[10px] text-gray-300 mt-1">© 2026 CleanerHQ Inc.</p>
+            </div>
+
+            <div class="h-16"></div> <!-- Bottom Spacer -->
+        </div>
+
+        <!-- AI Copilot Modal/Overlay (Hidden by default) -->
+        <div id="copilot-overlay" class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm z-50 hidden flex flex-col justify-end">
+            <div class="bg-white w-full rounded-t-[32px] shadow-[0_-10px_40px_rgba(0,0,0,0.2)] animate-slide-up h-[85%] flex flex-col overflow-hidden">
+                
+                <!-- Handle -->
+                <div class="w-full flex justify-center pt-3 pb-1 cursor-pointer" id="close-copilot">
+                    <div class="w-12 h-1.5 bg-gray-300 rounded-full"></div>
+                </div>
+
+                <!-- Copilot Header -->
+                <div class="px-6 pb-4 border-b border-gray-100 flex justify-between items-center">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary-light flex items-center justify-center shadow-lg shadow-primary/20">
+                            <i class="fa-solid fa-sparkles text-white text-sm"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-gray-900">AI Copilot</h3>
+                            <div class="flex items-center gap-1.5" id="copilot-status">
+                                <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                                <span class="text-[10px] text-gray-500 font-medium uppercase tracking-wider">Online • Requires Internet</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="text-gray-400 hover:text-gray-600 p-2" id="close-copilot-btn">
+                        <i class="fa-solid fa-xmark text-lg"></i>
+                    </button>
+                </div>
+
+                <!-- Chat Area -->
+                <div class="flex-1 bg-gray-50/50 p-5 overflow-y-auto space-y-4" id="chat-container">
+                    <!-- Offline Fallback (Hidden when online) -->
+                    <div id="offline-fallback" class="hidden space-y-3">
+                        <div class="bg-orange-50 border border-orange-100 p-3 rounded-xl text-xs text-orange-800 flex items-center gap-2">
+                            <i class="fa-solid fa-wifi-slash"></i>
+                            <span>You're offline. Basic commands available:</span>
+                        </div>
+                        <div class="grid grid-cols-1 gap-2">
+                            <button class="text-left p-3 bg-white border border-gray-200 rounded-xl text-xs font-semibold text-gray-700">View Offline Schedule</button>
+                            <button class="text-left p-3 bg-white border border-gray-200 rounded-xl text-xs font-semibold text-gray-700">Open Emergency Contacts</button>
+                            <button class="text-left p-3 bg-white border border-gray-200 rounded-xl text-xs font-semibold text-gray-700">Local Inventory Check</button>
+                        </div>
+                    </div>
+
+                    <!-- AI Welcome Message -->
+                    <div class="flex gap-3 max-w-[85%]">
+                        <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-1">
+                            <i class="fa-solid fa-robot text-primary text-xs"></i>
+                        </div>
+                        <div class="bg-white p-3.5 rounded-2xl rounded-tl-none shadow-sm border border-gray-100 text-sm text-gray-700 leading-relaxed">
+                            Hi David! I can help you check profits, draft messages to clients, or review today's schedule. What's on your mind?
+                        </div>
+                    </div>
+
+                    <!-- User Message Example -->
+                    <div class="flex gap-3 max-w-[85%] ml-auto flex-row-reverse">
+                        <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center shrink-0 mt-1 overflow-hidden">
+                            <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-2.jpg" class="w-full h-full object-cover">
+                        </div>
+                        <div class="bg-primary text-white p-3.5 rounded-2xl rounded-tr-none shadow-sm text-sm leading-relaxed">
+                            Show me the profit margin for the Downtown Office job.
+                        </div>
+                    </div>
+
+                     <!-- AI Response with Data -->
+                     <div class="flex gap-3 max-w-[90%]">
+                        <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-1">
+                            <i class="fa-solid fa-robot text-primary text-xs"></i>
+                        </div>
+                        <div class="space-y-2 w-full">
+                            <div class="bg-white p-3.5 rounded-2xl rounded-tl-none shadow-sm border border-gray-100 text-sm text-gray-700 leading-relaxed">
+                                Here's the breakdown for the Downtown Office Complex:
+                            </div>
+                            <!-- Data Card in Chat -->
+                            <div class="bg-white p-3 rounded-xl border border-gray-200 shadow-sm">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-xs font-bold text-gray-500 uppercase">Profit-Guard</span>
+                                    <span class="bg-green-100 text-green-700 text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1">
+                                        <i class="fa-solid fa-shield"></i> Healthy
+                                    </span>
+                                </div>
+                                <div class="flex items-baseline gap-1 mb-1">
+                                    <span class="text-2xl font-bold text-gray-900">32%</span>
+                                    <span class="text-xs text-gray-500">margin</span>
+                                </div>
+                                <div class="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
+                                    <div class="bg-green-500 h-full w-[32%]"></div>
+                                </div>
+                                <div class="flex justify-between mt-2 text-[10px] text-gray-500">
+                                    <span>Rev: $450</span>
+                                    <span>Cost: $306</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Input Area -->
+                <div class="p-4 bg-white border-t border-gray-100">
+                    <!-- Quick Chips -->
+                    <div class="flex gap-2 mb-3 overflow-x-auto no-scrollbar pb-1">
+                        <button class="whitespace-nowrap px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium text-gray-600 hover:bg-gray-100 hover:border-gray-300 transition-colors">
+                            Draft invoice
+                        </button>
+                        <button class="whitespace-nowrap px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium text-gray-600 hover:bg-gray-100 hover:border-gray-300 transition-colors">
+                            Check team status
+                        </button>
+                        <button class="whitespace-nowrap px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium text-gray-600 hover:bg-gray-100 hover:border-gray-300 transition-colors">
+                            Summarize expenses
+                        </button>
+                    </div>
+
+                    <div class="relative flex items-center gap-2">
+                        <button class="w-10 h-10 rounded-full bg-gray-50 text-gray-400 hover:text-primary transition-colors flex items-center justify-center shrink-0">
+                            <i class="fa-solid fa-microphone"></i>
+                        </button>
+                        <div class="flex-1 relative">
+                            <input type="text" placeholder="Ask Copilot..." class="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-full focus:ring-primary focus:border-primary block pl-4 pr-10 p-2.5 outline-none transition-all">
+                            <button class="absolute right-1.5 top-1.5 w-7 h-7 bg-primary text-white rounded-full flex items-center justify-center hover:bg-primary-dark transition-colors shadow-sm">
+                                <i class="fa-solid fa-arrow-up text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="text-center mt-2">
+                        <p class="text-[10px] text-gray-400">AI can make mistakes. Verify important info.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SOS Modal (Silent/Fast) -->
+        <div id="sos-modal" class="absolute inset-0 bg-white z-[70] hidden flex flex-col items-center justify-center p-8 text-center">
+            <div class="w-20 h-20 border-4 border-primary border-t-transparent rounded-full animate-spin mb-6"></div>
+            <h2 class="text-xl font-bold text-gray-900 mb-2">Sending Silent Alert...</h2>
+            <p class="text-gray-500 text-sm mb-12">Your GPS location is being shared with dispatch. No further action required.</p>
+            <button id="cancel-sos" class="px-8 py-3 bg-gray-100 text-gray-600 font-bold rounded-xl active:scale-95 transition-all">
+                Cancel (4s)
+            </button>
+        </div>
+
+        <!-- Bottom Navigation Bar -->
+        <div class="absolute bottom-0 left-0 w-full bg-white border-t border-gray-100 pb-safe-bottom pt-2 px-2 z-40 rounded-t-[20px] shadow-[0_-8px_30px_rgba(0,0,0,0.03)]">
+            <nav class="flex justify-around items-center h-16">
+                <!-- Home -->
+                <button class="flex flex-col items-center justify-center w-16 h-full gap-1 text-gray-400 hover:text-gray-600 transition-colors group">
+                    <i class="fa-solid fa-house text-xl mb-0.5 group-hover:-translate-y-0.5 transition-transform"></i>
+                    <span class="text-[10px] font-medium">Home</span>
+                </button>
+                <!-- Schedule -->
+                <button class="flex flex-col items-center justify-center w-16 h-full gap-1 text-gray-400 hover:text-gray-600 transition-colors group">
+                    <i class="fa-solid fa-calendar-day text-xl mb-0.5 group-hover:-translate-y-0.5 transition-transform"></i>
+                    <span class="text-[10px] font-medium">Schedule</span>
+                </button>
+                <!-- Jobs -->
+                <button class="flex flex-col items-center justify-center w-16 h-full gap-1 text-gray-400 hover:text-gray-600 transition-colors group">
+                    <i class="fa-solid fa-briefcase text-xl mb-0.5 group-hover:-translate-y-0.5 transition-transform"></i>
+                    <span class="text-[10px] font-medium">Jobs</span>
+                </button>
+                <!-- Chat -->
+                <button class="flex flex-col items-center justify-center w-16 h-full gap-1 text-gray-400 hover:text-gray-600 transition-colors group">
+                    <div class="relative">
+                        <i class="fa-solid fa-comment-dots text-xl mb-0.5 group-hover:-translate-y-0.5 transition-transform"></i>
+                        <span class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
+                    </div>
+                    <span class="text-[10px] font-medium">Chat</span>
+                </button>
+                <!-- More (Active) -->
+                <button class="flex flex-col items-center justify-center w-16 h-full gap-1 text-primary">
+                    <div class="w-10 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
+                        <i class="fa-solid fa-grid-2 text-lg"></i>
+                    </div>
+                    <span class="text-[10px] font-bold tracking-tight">More</span>
+                </button>
+            </nav>
+        </div>
+
+    </main>
+
+    <!-- Floating Action Button (AI Copilot) - Available everywhere -->
+    <button id="ai-fab" class="fixed bottom-24 right-4 sm:right-auto sm:left-[calc(50%+150px)] w-14 h-14 bg-gradient-to-br from-primary to-primary-light rounded-full shadow-floating flex items-center justify-center text-white z-50 animate-float hover:scale-110 transition-transform active:scale-90 border-2 border-white/20 group">
+        <i class="fa-solid fa-sparkles text-xl group-hover:rotate-12 transition-transform"></i>
+    </button>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // AI Copilot Modal Logic
+            const copilotTrigger = document.getElementById('copilot-trigger');
+            const aiFab = document.getElementById('ai-fab');
+            const copilotOverlay = document.getElementById('copilot-overlay');
+            const closeCopilot = document.getElementById('close-copilot');
+            const closeCopilotBtn = document.getElementById('close-copilot-btn');
+
+            function openCopilot() {
+                copilotOverlay.classList.remove('hidden');
+                aiFab.classList.add('hidden'); // Hide FAB when modal is open
+            }
+
+            function closeCopilotFunc() {
+                copilotOverlay.classList.add('hidden');
+                aiFab.classList.remove('hidden'); // Show FAB
+            }
+
+            copilotTrigger.addEventListener('click', openCopilot);
+            aiFab.addEventListener('click', openCopilot);
+            closeCopilot.addEventListener('click', closeCopilotFunc);
+            closeCopilotBtn.addEventListener('click', closeCopilotFunc);
+
+            // SOS Modal Logic (Fast/Discreet)
+            let sosTimer;
+            const sosTrigger = document.getElementById('sos-trigger');
+            const sosModal = document.getElementById('sos-modal');
+            const cancelSos = document.getElementById('cancel-sos');
+
+            sosTrigger.addEventListener('click', () => {
+                sosModal.classList.remove('hidden');
+                sosTimer = setTimeout(() => {
+                    // Logic for "fast" silent send
+                    sosModal.innerHTML = '<div class="flex flex-col items-center"><i class="fa-solid fa-check-circle text-6xl text-success mb-4"></i><h2 class="text-xl font-bold">Alert Sent</h2><p class="text-gray-500">Help is on the way.</p></div>';
+                    setTimeout(() => sosModal.classList.add('hidden'), 2000);
+                }, 4000);
+            });
+
+            cancelSos.addEventListener('click', () => {
+                clearTimeout(sosTimer);
+                sosModal.classList.add('hidden');
+            });
+
+            // Offline Simulation (Just for visual check)
+            /*
+            setTimeout(() => {
+                const banner = document.getElementById('offline-banner');
+                banner.classList.remove('-translate-y-full');
+            }, 5000);
+            */
+        });
+    </script>
+</body>
+</html>

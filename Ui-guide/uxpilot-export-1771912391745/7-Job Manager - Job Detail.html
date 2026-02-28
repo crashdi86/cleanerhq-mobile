@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Detail - CleanerHQ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.plot.ly/plotly-3.1.1.min.js"></script>
+    <script>
+        window.FontAwesomeConfig = { autoReplaceSvg: 'nest' };
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            DEFAULT: '#2A5B4F', // Forest Teal
+                            dark: '#234E43',
+                            light: '#3D7A6B',
+                            glass: 'rgba(42, 91, 79, 0.95)'
+                        },
+                        secondary: {
+                            DEFAULT: '#B7F0AD', // Success/Accents
+                            dim: '#9AD690',
+                            light: '#E3F9DF'
+                        },
+                        accent: {
+                            bg: '#F0F7F2', // Card tints
+                            surface: '#F8F9FA',
+                            blue: '#DCEAF9',
+                            orange: '#F9EADC'
+                        },
+                        logo: '#5EBD6D',
+                        error: '#991B1B',
+                        warning: '#F59E0B',
+                        success: '#10B981',
+                        gray: {
+                            850: '#1F2937',
+                            950: '#0B1120'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'soft': '0 8px 24px -4px rgba(42, 91, 79, 0.08)',
+                        'card': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
+                        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.07)',
+                        'floating': '0 16px 48px -12px rgba(42, 91, 79, 0.25)',
+                        'glow': '0 0 15px rgba(183, 240, 173, 0.5)',
+                        'inner-light': 'inset 0 2px 4px 0 rgba(255, 255, 255, 0.3)'
+                    },
+                    backgroundImage: {
+                        'forest-gradient': 'linear-gradient(135deg, #2A5B4F 0%, #234E43 100%)',
+                        'glass-gradient': 'linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
+                        'card-shimmer': 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)'
+                    },
+                    borderRadius: {
+                        'xl': '16px',
+                        '2xl': '20px',
+                        '3xl': '24px',
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #F0F2F5;
+            -webkit-font-smoothing: antialiased;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        /* Hide scrollbar but keep functionality */
+        ::-webkit-scrollbar {
+            width: 0px;
+            background: transparent;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        .glass-header {
+            background: rgba(42, 91, 79, 0.95);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Custom safe area for notched devices */
+        .safe-top {
+            padding-top: max(env(safe-area-inset-top), 20px);
+        }
+        
+        .safe-bottom {
+            padding-bottom: max(env(safe-area-inset-bottom), 20px);
+        }
+
+        .tap-highlight-none {
+            -webkit-tap-highlight-color: transparent;
+        }
+    </style>
+</head>
+<body class="bg-[#F0F2F5] min-h-screen flex items-center justify-center p-4 sm:p-8">
+
+    <!-- Mobile Frame Container -->
+    <main id="job-detail-container" class="relative w-full max-w-[430px] h-[880px] bg-[#F8F9FA] sm:rounded-[36px] shadow-2xl overflow-hidden flex flex-col z-10 border-[6px] border-gray-900/5">
+        
+        <!-- Offline/Sync Indicator (Simulating queued sync) -->
+        <div id="sync-indicator" class="absolute top-0 left-0 w-full h-1 bg-gray-200 z-50">
+            <!-- Animated bar simulates background sync -->
+            <div class="h-full bg-secondary w-1/3 animate-[loading_2s_ease-in-out_infinite]"></div>
+        </div>
+
+        <!-- Header Section -->
+        <header id="header" class="relative z-30 bg-primary pt-safe-top pb-4 overflow-hidden rounded-b-[32px] shadow-soft shrink-0">
+            <!-- Background Gradient & Decor -->
+            <div class="absolute inset-0 bg-forest-gradient"></div>
+            <div class="absolute -top-24 -right-24 w-64 h-64 bg-[#B7F0AD] rounded-full blur-3xl opacity-20 pointer-events-none"></div>
+            
+            <!-- Header Content -->
+            <div class="relative px-5 pt-6 flex justify-between items-center">
+                <button class="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-95">
+                    <i class="fa-solid fa-arrow-left text-lg"></i>
+                </button>
+                
+                <div class="flex flex-col items-center">
+                    <span class="text-secondary font-bold text-xs tracking-wider uppercase">Job #4092</span>
+                    <h1 class="text-lg font-bold text-white tracking-tight">Deep Clean</h1>
+                </div>
+
+                <div class="flex gap-2">
+                     <!-- Sync Status Icon -->
+                     <div class="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/80" title="Changes queued for sync">
+                        <i class="fa-solid fa-cloud-arrow-up text-sm animate-pulse"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Sub-header Status Bar -->
+            <div class="px-6 mt-4 flex items-center justify-between text-white/90">
+                <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full bg-secondary animate-pulse"></div>
+                    <span class="text-xs font-semibold">Scheduled: 9:00 AM - 11:30 AM</span>
+                </div>
+                <div class="bg-white/20 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider backdrop-blur-sm">
+                    Residential
+                </div>
+            </div>
+        </header>
+
+        <!-- Scrollable Content Area -->
+        <div class="flex-1 overflow-y-auto pt-4 pb-28 px-4 bg-[#F8F9FA] scroll-smooth no-scrollbar" id="scroll-container">
+            
+            <!-- 1. Arrival Card (Critical Info) - Designed for 15s attention span -->
+            <section id="arrival-card" class="bg-white rounded-2xl p-0 shadow-card border border-gray-100 mb-4 overflow-hidden relative">
+                <!-- Map Preview Background (Simulated) -->
+                <div class="h-24 bg-gray-200 w-full relative overflow-hidden">
+                    <div class="absolute inset-0 bg-[url('https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/-97.7431,30.2672,15,0/600x200?access_token=pk.eyJ1IjoidXhwaWxvdCIsImEiOiJjbHByeHlzZXYwMDJnMmlwZzR4ZzJ4ZzJ4In0.ABC')] bg-cover bg-center opacity-60 grayscale"></div>
+                    <div class="absolute inset-0 bg-gradient-to-t from-white via-white/40 to-transparent"></div>
+                    <!-- Get Directions Button (Floating) -->
+                    <button class="absolute top-3 right-3 bg-primary text-white text-xs font-bold px-4 py-2 rounded-full shadow-lg flex items-center gap-2 active:scale-95 transition-transform z-10">
+                        <i class="fa-solid fa-location-arrow"></i>
+                        <span>Get Directions</span>
+                    </button>
+                </div>
+
+                <div class="px-5 pb-5 -mt-6 relative z-10">
+                    <!-- Client Avatar Overlap -->
+                    <div class="flex justify-between items-end mb-3">
+                        <div class="w-16 h-16 rounded-2xl bg-white p-1 shadow-sm">
+                            <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-6.jpg" alt="Client" class="w-full h-full rounded-xl object-cover border border-gray-100">
+                        </div>
+                        <!-- Contact Actions -->
+                        <div class="flex gap-2 mb-1">
+                            <button class="w-10 h-10 rounded-full bg-accent-surface border border-gray-200 flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-colors">
+                                <i class="fa-solid fa-phone"></i>
+                            </button>
+                            <button class="w-10 h-10 rounded-full bg-accent-surface border border-gray-200 flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-colors">
+                                <i class="fa-solid fa-message"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Address & Copy -->
+                    <div class="mb-4">
+                        <h2 class="text-xl font-extrabold text-gray-900 leading-tight mb-1">Sarah Jenkins</h2>
+                        <button class="flex items-start gap-2 text-left group w-full active:opacity-70">
+                            <i class="fa-solid fa-location-dot text-gray-500 mt-1"></i>
+                            <div>
+                                <p class="text-sm font-bold text-gray-800 group-active:text-primary transition-colors">4209 Highland Park Dr, Austin, TX 78731</p>
+                                <span class="text-xs text-gray-600 font-bold uppercase tracking-wider mt-0.5 block">Tap address to copy</span>
+                            </div>
+                        </button>
+                    </div>
+
+                    <!-- Gate Code (High Visibility) -->
+                    <div class="bg-accent-bg rounded-xl p-3 border border-secondary/30 flex items-center justify-between active:bg-secondary/20 transition-colors cursor-pointer" onclick="navigator.clipboard.writeText('#4092')">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-lg bg-white flex items-center justify-center text-gray-700 shadow-sm border border-gray-100">
+                                <i class="fa-solid fa-key text-primary"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500 font-semibold uppercase">Gate Code</p>
+                                <p class="text-xl font-mono font-bold text-gray-900 tracking-widest">#4092</p>
+                            </div>
+                        </div>
+                        <div class="text-gray-400 text-xs font-medium bg-white px-2 py-1 rounded border border-gray-100 shadow-sm">
+                            Tap to Copy
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. Profit Guard (Owner Only - David) -->
+            <section id="profit-guard-section" class="mb-5">
+                <div class="bg-gradient-to-r from-white to-green-50 rounded-xl p-3 border border-green-100 shadow-sm flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm border border-green-100">
+                             <i class="fa-solid fa-shield-halved text-green-600"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xs font-bold text-gray-900 uppercase tracking-wide">Profit Guard</h3>
+                            <p class="text-[10px] text-gray-500 font-medium">Job is tracking 15% above margin</p>
+                        </div>
+                    </div>
+                    <span class="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-1 rounded-md border border-green-200">
+                        HEALTHY
+                    </span>
+                </div>
+            </section>
+
+            <!-- 3. Time Tracking (Clock In Action) -->
+            <section id="clock-in-section" class="mb-6">
+                <button class="w-full bg-primary text-white rounded-2xl p-1 pr-2 flex items-center justify-between shadow-lg shadow-primary/20 hover:bg-primary-dark transition-all active:scale-[0.98] group overflow-hidden relative">
+                    <!-- Progress Ring Animation Background (Subtle) -->
+                    <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMiIgZmlsbD0id2hpdGUiIG9wYWNpdHk9IjAuMSIvPjwvc3ZnPg==')] opacity-10"></div>
+                    
+                    <div class="flex items-center gap-4 pl-4 py-3 relative z-10">
+                        <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center border border-white/20 shadow-inner-light group-active:scale-90 transition-transform">
+                            <i class="fa-solid fa-fingerprint text-2xl text-secondary"></i>
+                        </div>
+                        <div class="text-left">
+                            <h3 class="text-lg font-bold">Clock In</h3>
+                            <p class="text-xs text-white/70 font-medium">Start job timer</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white/10 px-4 py-2 rounded-xl backdrop-blur-sm border border-white/10 text-xs font-mono text-secondary">
+                        00:00:00
+                    </div>
+                </button>
+            </section>
+
+            <!-- 4. Checklist Progress -->
+            <section id="checklist-section" class="mb-6">
+                <div class="flex items-center justify-between mb-3 px-1">
+                    <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wide">Checklist</h3>
+                    <span class="text-xs font-bold text-primary">0/12 Done</span>
+                </div>
+                
+                <div class="bg-white rounded-2xl shadow-card border border-gray-100 overflow-hidden">
+                    <!-- Progress Bar Header -->
+                    <div class="h-1.5 w-full bg-gray-100">
+                        <div class="h-full bg-gray-100 w-0 transition-all duration-500"></div>
+                    </div>
+
+                    <!-- List Items -->
+                    <div class="divide-y divide-gray-50">
+                        <!-- Item 1 -->
+                        <label class="flex items-center gap-4 p-4 hover:bg-gray-50 active:bg-gray-100 transition-colors cursor-pointer group">
+                            <div class="relative flex items-center justify-center">
+                                <input type="checkbox" class="peer appearance-none w-6 h-6 border-2 border-gray-300 rounded-lg checked:bg-primary checked:border-primary transition-all">
+                                <i class="fa-solid fa-check text-white text-xs absolute opacity-0 peer-checked:opacity-100 transform scale-50 peer-checked:scale-100 transition-all"></i>
+                            </div>
+                            <span class="text-sm font-medium text-gray-700 peer-checked:text-gray-400 peer-checked:line-through transition-colors">Dust ceiling fans & vents</span>
+                        </label>
+                        
+                        <!-- Item 2 -->
+                        <label class="flex items-center gap-4 p-4 hover:bg-gray-50 active:bg-gray-100 transition-colors cursor-pointer group">
+                            <div class="relative flex items-center justify-center">
+                                <input type="checkbox" class="peer appearance-none w-6 h-6 border-2 border-gray-300 rounded-lg checked:bg-primary checked:border-primary transition-all">
+                                <i class="fa-solid fa-check text-white text-xs absolute opacity-0 peer-checked:opacity-100 transform scale-50 peer-checked:scale-100 transition-all"></i>
+                            </div>
+                            <span class="text-sm font-medium text-gray-700 peer-checked:text-gray-400 peer-checked:line-through transition-colors">Wipe down baseboards</span>
+                        </label>
+
+                        <!-- Item 3 -->
+                        <label class="flex items-center gap-4 p-4 hover:bg-gray-50 active:bg-gray-100 transition-colors cursor-pointer group">
+                            <div class="relative flex items-center justify-center">
+                                <input type="checkbox" class="peer appearance-none w-6 h-6 border-2 border-gray-300 rounded-lg checked:bg-primary checked:border-primary transition-all">
+                                <i class="fa-solid fa-check text-white text-xs absolute opacity-0 peer-checked:opacity-100 transform scale-50 peer-checked:scale-100 transition-all"></i>
+                            </div>
+                            <span class="text-sm font-medium text-gray-700 peer-checked:text-gray-400 peer-checked:line-through transition-colors">Clean kitchen surfaces</span>
+                        </label>
+                    </div>
+                    
+                    <button class="w-full py-3 text-xs font-bold text-gray-500 border-t border-gray-100 hover:bg-gray-50 flex items-center justify-center gap-2">
+                        <span>Show 9 more items</span>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </button>
+                </div>
+            </section>
+
+            <!-- 5. Job Photos (Before/During/After) -->
+            <section id="photos-section" class="mb-6">
+                <div class="flex items-center justify-between mb-3 px-1">
+                    <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wide">Photos</h3>
+                    <button class="text-xs font-bold text-primary flex items-center gap-1 bg-primary/5 px-2 py-1 rounded-md">
+                        <i class="fa-solid fa-camera"></i> Add New
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-3 gap-2">
+                    <!-- Before Photo (Existing) -->
+                    <div class="aspect-square rounded-xl bg-gray-200 relative overflow-hidden group shadow-sm">
+                        <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/de2c1849d0-cca74f99d2ffda80bbec.png" class="w-full h-full object-cover opacity-90 group-hover:scale-110 transition-transform duration-500">
+                        <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
+                            <span class="text-[10px] text-white font-bold">Before</span>
+                        </div>
+                    </div>
+
+                    <!-- Issue Photo (Alert) -->
+                    <div class="aspect-square rounded-xl bg-gray-200 relative overflow-hidden group shadow-sm border-2 border-red-400/50">
+                        <img src="https://images.unsplash.com/photo-1563453392212-326f5e854473?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" class="w-full h-full object-cover opacity-90 group-hover:scale-110 transition-transform duration-500">
+                        <div class="absolute top-1 right-1 bg-red-500 rounded-full w-4 h-4 flex items-center justify-center">
+                            <i class="fa-solid fa-exclamation text-[8px] text-white"></i>
+                        </div>
+                        <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
+                            <span class="text-[10px] text-white font-bold">Issue</span>
+                        </div>
+                    </div>
+
+                    <!-- Add Placeholder -->
+                    <button class="aspect-square rounded-xl bg-white border-2 border-dashed border-gray-300 flex flex-col items-center justify-center gap-1 hover:border-primary hover:bg-primary/5 transition-colors active:scale-95">
+                        <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-400">
+                            <i class="fa-solid fa-plus text-sm"></i>
+                        </div>
+                        <span class="text-[10px] font-bold text-gray-400">Add Photo</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- 6. Job Notes -->
+            <section id="notes-section" class="mb-20">
+                <div class="flex items-center justify-between mb-3 px-1">
+                    <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wide">Notes</h3>
+                </div>
+                
+                <div class="bg-white rounded-2xl shadow-card border border-gray-100 p-4">
+                    <div class="flex gap-3 mb-4">
+                        <div class="w-8 h-8 rounded-full bg-accent-orange flex items-center justify-center shrink-0">
+                            <i class="fa-solid fa-note-sticky text-orange-500 text-xs"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 mb-1">Added by <span class="font-bold text-gray-700">Office Manager</span> • Yesterday</p>
+                            <p class="text-sm text-gray-800 leading-relaxed bg-orange-50/50 p-2 rounded-lg border border-orange-100/50">
+                                Client requested eco-friendly products only for the nursery room. Please double check the supplies kit.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Add Note Input -->
+                    <div class="relative">
+                        <input type="text" placeholder="Type a note..." class="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 pl-4 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
+                        <button class="absolute right-2 top-2 w-8 h-8 bg-primary text-white rounded-lg flex items-center justify-center shadow-sm hover:bg-primary-dark active:scale-90 transition-all">
+                            <i class="fa-solid fa-paper-plane text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+
+        <!-- Floating Action Button (AI Copilot) -->
+        <button class="absolute bottom-24 right-5 w-14 h-14 bg-gradient-to-br from-primary to-primary-light rounded-full shadow-floating flex items-center justify-center text-white z-40 animate-float hover:scale-110 transition-transform active:scale-90 border-2 border-white/20">
+            <i class="fa-solid fa-sparkles text-xl"></i>
+        </button>
+
+        <!-- Bottom Navigation Bar - Consistent with Previous Screens -->
+        <nav id="footer" class="absolute bottom-0 w-full bg-white border-t border-gray-100 px-2 py-2 pb-safe-bottom z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.03)]">
+            <div class="flex justify-around items-center h-14">
+                <!-- Home -->
+                <button class="flex flex-col items-center justify-center w-16 h-full gap-1 text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fa-solid fa-house text-xl"></i>
+                    <span class="text-[10px] font-medium">Home</span>
+                </button>
+
+                <!-- Jobs (Active) -->
+                <button class="flex flex-col items-center justify-center w-16 h-full gap-1 text-primary">
+                    <div class="w-10 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
+                        <i class="fa-solid fa-briefcase text-lg"></i>
+                    </div>
+                    <span class="text-[10px] font-bold tracking-tight">Jobs</span>
+                </button>
+
+                <!-- Schedule -->
+                <button class="flex flex-col items-center justify-center w-16 h-full gap-1 text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fa-solid fa-calendar-day text-xl"></i>
+                    <span class="text-[10px] font-medium">Schedule</span>
+                </button>
+
+                <!-- Messages -->
+                <button class="flex flex-col items-center justify-center w-16 h-full gap-1 text-gray-400 hover:text-gray-600 transition-colors relative">
+                    <div class="relative">
+                        <i class="fa-solid fa-comment-dots text-xl"></i>
+                        <span class="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+                    </div>
+                    <span class="text-[10px] font-medium">Messages</span>
+                </button>
+
+                <!-- Menu -->
+                <button class="flex flex-col items-center justify-center w-16 h-full gap-1 text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fa-solid fa-grid-2 text-xl"></i>
+                    <span class="text-[10px] font-medium">Menu</span>
+                </button>
+            </div>
+        </nav>
+
+    </main>
+
+    <script>
+        // Interaction Logic
+        document.addEventListener('DOMContentLoaded', () => {
+            // Animation for sections on load
+            const sections = document.querySelectorAll('section');
+            sections.forEach((section, index) => {
+                section.style.opacity = '0';
+                section.style.transform = 'translateY(15px)';
+                setTimeout(() => {
+                    section.style.transition = 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
+                    section.style.opacity = '1';
+                    section.style.transform = 'translateY(0)';
+                }, 50 * index);
+            });
+
+            // Button haptics simulation
+            const buttons = document.querySelectorAll('button, .cursor-pointer');
+            buttons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    this.style.transform = 'scale(0.96)';
+                    setTimeout(() => {
+                        this.style.transform = 'scale(1)';
+                    }, 100);
+                });
+            });
+
+            // Checklist interaction
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(box => {
+                box.addEventListener('change', function() {
+                    const parent = this.closest('label');
+                    const text = parent.querySelector('span');
+                    if(this.checked) {
+                        text.classList.add('text-gray-400', 'line-through');
+                        text.classList.remove('text-gray-700');
+                    } else {
+                        text.classList.remove('text-gray-400', 'line-through');
+                        text.classList.add('text-gray-700');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

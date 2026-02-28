@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - CleanerHQ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        window.FontAwesomeConfig = { autoReplaceSvg: 'nest' };
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            DEFAULT: '#2A5B4F', // Forest Teal
+                            dark: '#234E43',
+                            light: '#3D7A6B'
+                        },
+                        secondary: {
+                            DEFAULT: '#B7F0AD', // Success/Accents
+                            dim: '#9AD690'
+                        },
+                        accent: {
+                            bg: '#F0F7F2', // Card tints
+                            surface: '#F8F9FA'
+                        },
+                        logo: '#5EBD6D',
+                        error: '#991B1B',
+                        warning: '#F59E0B'
+                    },
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'soft': '0 4px 20px -2px rgba(42, 91, 79, 0.08)',
+                        'card': '0 2px 8px -1px rgba(0, 0, 0, 0.05)',
+                        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.07)',
+                    },
+                    spacing: {
+                        '13': '3.25rem', // 52px for touch targets
+                    }
+                }
+            }
+        }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #F8F9FA;
+            -webkit-font-smoothing: antialiased;
+        }
+        /* Glassmorphism utility */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+        .glass-header {
+            background: linear-gradient(135deg, rgba(42, 91, 79, 0.95), rgba(35, 78, 67, 0.98));
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        /* Custom Input Styles for High Contrast/Wet Hands */
+        .input-field:focus-within {
+            border-color: #2A5B4F;
+            box-shadow: 0 0 0 4px rgba(42, 91, 79, 0.1);
+        }
+        /* Hide scrollbar for cleaner mobile look */
+        ::-webkit-scrollbar {
+            width: 0px;
+            background: transparent;
+        }
+        /* Safe area spacing for mobile */
+        .safe-bottom {
+            padding-bottom: env(safe-area-inset-bottom, 24px);
+        }
+    </style>
+</head>
+<body class="bg-accent-surface min-h-screen flex flex-col items-center justify-center relative overflow-hidden">
+
+    <!-- Background Decorative Elements -->
+    <div class="absolute top-0 left-0 w-full h-[400px] bg-gradient-to-b from-[#2A5B4F] to-transparent opacity-10 pointer-events-none z-0"></div>
+    <div class="absolute -top-24 -right-24 w-64 h-64 bg-[#B7F0AD] rounded-full blur-3xl opacity-20 pointer-events-none z-0"></div>
+    <div class="absolute top-1/3 -left-20 w-48 h-48 bg-[#2A5B4F] rounded-full blur-3xl opacity-10 pointer-events-none z-0"></div>
+
+    <!-- Main Container (Mobile Frame Constraint) -->
+    <main id="login-container" class="relative w-full max-w-[430px] h-full min-h-screen sm:min-h-[840px] sm:h-[840px] bg-[#F8F9FA] sm:rounded-[32px] sm:shadow-2xl sm:my-8 overflow-hidden flex flex-col z-10">
+        
+        <!-- Offline Mode Indicator (Hidden by default, toggleable via JS for demo) -->
+        <div id="offline-banner" class="hidden absolute top-0 left-0 w-full bg-gray-900 text-white text-xs font-semibold py-3 px-4 z-50 flex items-center justify-between transform transition-transform duration-300">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-wifi-slash text-gray-400"></i>
+                <span>You are currently offline.</span>
+            </div>
+            <button class="text-secondary hover:text-white transition-colors text-xs font-bold uppercase tracking-wider">Retry</button>
+        </div>
+
+        <!-- Header Section -->
+        <header id="header" class="relative z-20 pt-16 pb-8 px-6 flex flex-col items-center">
+            <!-- Logo Mark -->
+            <div class="w-16 h-16 bg-gradient-to-br from-primary to-primary-dark rounded-2xl flex items-center justify-center shadow-lg mb-6 transform transition-transform hover:scale-105 duration-300">
+                <i class="fa-solid fa-sparkles text-white text-2xl"></i>
+            </div>
+            
+            <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight text-center mb-2">Welcome back</h1>
+            <p class="text-gray-500 text-center text-[15pt] leading-relaxed max-w-[280px]">
+                Sign in to access your jobs, schedule, and team.
+            </p>
+        </header>
+
+        <!-- Login Form Section -->
+        <section id="login-form-section" class="flex-1 px-6 pt-4 pb-8 flex flex-col justify-between overflow-y-auto">
+            
+            <form class="space-y-6 w-full" onsubmit="event.preventDefault();">
+                
+                <!-- Email Input Group -->
+                <div class="space-y-2">
+                    <label for="email" class="block text-sm font-semibold text-gray-700 ml-1">Email Address</label>
+                    <div class="input-field relative group bg-white rounded-2xl border border-gray-200 transition-all duration-200 ease-out">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <i class="fa-regular fa-envelope text-gray-400 group-focus-within:text-primary transition-colors text-lg"></i>
+                        </div>
+                        <input 
+                            type="email" 
+                            id="email" 
+                            name="email" 
+                            class="block w-full pl-12 pr-4 py-4 bg-transparent border-none rounded-2xl text-gray-900 placeholder-gray-400 focus:ring-0 text-[17px] font-medium h-[60px]" 
+                            placeholder="name@cleanerhq.com"
+                            autocomplete="email"
+                            required
+                        >
+                    </div>
+                </div>
+
+                <!-- Password Input Group -->
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center ml-1">
+                        <label for="password" class="block text-sm font-semibold text-gray-700">Password</label>
+                        <a href="#" class="text-primary font-semibold text-sm hover:text-primary-dark transition-colors p-1 rounded focus:outline-none focus:ring-2 focus:ring-primary/20">Forgot Password?</a>
+                    </div>
+                    <div class="input-field relative group bg-white rounded-2xl border border-gray-200 transition-all duration-200 ease-out">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <i class="fa-solid fa-lock text-gray-400 group-focus-within:text-primary transition-colors text-lg"></i>
+                        </div>
+                        <input 
+                            type="password" 
+                            id="password" 
+                            name="password" 
+                            class="block w-full pl-12 pr-12 py-4 bg-transparent border-none rounded-2xl text-gray-900 placeholder-gray-400 focus:ring-0 text-[17px] font-medium h-[60px]" 
+                            placeholder="••••••••"
+                            required
+                        >
+                        <button type="button" onclick="togglePassword()" class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none p-2">
+                            <i id="eye-icon" class="fa-regular fa-eye text-lg"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Spacer for visual breathing room -->
+                <div class="h-2"></div>
+
+                <!-- Primary Action -->
+                <button type="submit" class="w-full bg-primary hover:bg-primary-dark active:scale-[0.98] text-white font-bold text-[52pt] rounded-2xl h-[120px] shadow-lg shadow-primary/20 transition-all duration-200 flex items-center justify-center gap-4 group">
+                    <span>Sign In</span>
+                    <i class="fa-solid fa-arrow-right text-[30pt] opacity-70 group-hover:translate-x-2 transition-transform"></i>
+                </button>
+
+            </form>
+
+            <!-- Biometric & Footer Actions -->
+            <div class="mt-8 flex flex-col items-center gap-8 safe-bottom">
+                
+                <div class="relative w-full flex items-center justify-center">
+                    <div class="absolute inset-0 flex items-center">
+                        <div class="w-full border-t border-gray-200"></div>
+                    </div>
+                    <div class="relative bg-[#F8F9FA] px-4 text-sm text-gray-400 font-medium">or continue with</div>
+                </div>
+
+                <!-- Biometric Button (Face ID / Fingerprint) -->
+                <button class="flex flex-col items-center gap-3 group w-full max-w-[200px]" onclick="simulateBiometric()">
+                    <div class="w-16 h-16 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center text-primary text-2xl group-hover:border-primary group-hover:shadow-md transition-all duration-300">
+                        <i class="fa-solid fa-fingerprint"></i>
+                    </div>
+                    <span class="text-sm font-semibold text-gray-600 group-hover:text-gray-900 transition-colors">Use Face ID</span>
+                </button>
+
+                <!-- Help Link -->
+                <div class="mt-auto pt-6 text-center">
+                    <p class="text-sm text-gray-500">
+                        Don't have an account? <a href="#" class="text-primary font-bold hover:underline">Contact Admin</a>
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Loading Overlay (Hidden by default) -->
+        <div id="loading-overlay" class="hidden absolute inset-0 bg-white/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center">
+            <div class="w-12 h-12 border-4 border-gray-200 border-t-primary rounded-full animate-spin mb-4"></div>
+            <p class="text-primary font-semibold animate-pulse">Authenticating...</p>
+        </div>
+
+    </main>
+
+    <!-- UI Demo Controls (For presentation purposes only) -->
+    <div class="fixed bottom-4 right-4 hidden sm:flex flex-col gap-2 z-50">
+        <button onclick="toggleOffline()" class="bg-gray-800 text-white text-xs px-3 py-2 rounded shadow hover:bg-gray-700">Toggle Offline Mode</button>
+        <button onclick="toggleLoading()" class="bg-primary text-white text-xs px-3 py-2 rounded shadow hover:bg-primary-dark">Simulate Loading</button>
+    </div>
+
+    <script>
+        // Password Visibility Toggle
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const eyeIcon = document.getElementById('eye-icon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                eyeIcon.classList.remove('fa-eye');
+                eyeIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                eyeIcon.classList.remove('fa-eye-slash');
+                eyeIcon.classList.add('fa-eye');
+            }
+        }
+
+        // Simulate Biometric Login
+        function simulateBiometric() {
+            toggleLoading();
+            setTimeout(() => {
+                toggleLoading();
+                // Success feedback could go here
+                const btn = document.querySelector('button[onclick="simulateBiometric()"] div');
+                const originalClass = btn.className;
+                const originalContent = btn.innerHTML;
+                
+                btn.className = "w-16 h-16 rounded-full bg-green-100 border border-green-200 shadow-sm flex items-center justify-center text-green-600 text-2xl transition-all duration-300";
+                btn.innerHTML = '<i class="fa-solid fa-check"></i>';
+                
+                setTimeout(() => {
+                    btn.className = originalClass;
+                    btn.innerHTML = originalContent;
+                }, 2000);
+            }, 1500);
+        }
+
+        // Toggle Loading State
+        function toggleLoading() {
+            const overlay = document.getElementById('loading-overlay');
+            overlay.classList.toggle('hidden');
+        }
+
+        // Toggle Offline Banner
+        function toggleOffline() {
+            const banner = document.getElementById('offline-banner');
+            banner.classList.toggle('hidden');
+        }
+
+        // Input Focus Effects for Accessibility/Wet Hands
+        const inputs = document.querySelectorAll('input');
+        inputs.forEach(input => {
+            input.addEventListener('focus', () => {
+                input.parentElement.classList.add('ring-2', 'ring-primary', 'ring-opacity-20', 'border-primary');
+            });
+            input.addEventListener('blur', () => {
+                input.parentElement.classList.remove('ring-2', 'ring-primary', 'ring-opacity-20', 'border-primary');
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/preflight.css" layer(base);
+@import "tailwindcss/utilities.css";
+
+/* Platform-specific font defaults */
+@media android {
+  :root {
+    --font-mono: monospace;
+    --font-sans: normal;
+  }
+}
+
+@media ios {
+  :root {
+    --font-mono: ui-monospace;
+    --font-sans: system-ui;
+  }
+}
+
+@layer theme {
+  @theme {
+    /* ── Colors ── */
+    --color-primary: #2A5B4F;
+    --color-primary-dark: #234E43;
+    --color-primary-light: #3A6B5F;
+    --color-mint: #B7F0AD;
+    --color-accent: #F59E0B;
+    --color-accent-bg: #E8F5E9;
+    --color-error: #EF4444;
+    --color-warning: #F59E0B;
+    --color-success: #10B981;
+    --color-info: #3B82F6;
+    --color-surface: #F8FAF9;
+    --color-surface-dark: #1A1A2E;
+    --color-text-primary: #1F2937;
+    --color-text-secondary: #6B7280;
+    --color-text-inverse: #FFFFFF;
+    --color-border: #E5E7EB;
+
+    /* Glass morphism */
+    --color-glass-bg: rgba(42, 91, 79, 0.95);
+    --color-glass-overlay: rgba(255, 255, 255, 0.08);
+    --color-glass-border: rgba(255, 255, 255, 0.15);
+    --color-tab-inactive: rgba(255, 255, 255, 0.5);
+
+    /* ── Spacing (4pt grid) ── */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+    --spacing-2xl: 48px;
+    --spacing-3xl: 64px;
+
+    /* ── Border Radius ── */
+    --radius-card: 20px;
+    --radius-card-lg: 24px;
+    --radius-button: 16px;
+    --radius-input: 16px;
+    --radius-avatar: 9999px;
+    --radius-badge: 12px;
+
+    /* ── Shadows ── */
+    --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.06);
+    --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.08);
+    --shadow-glass: 0 8px 32px rgba(42, 91, 79, 0.15);
+    --shadow-floating: 0 12px 40px rgba(0, 0, 0, 0.12);
+    --shadow-glow: 0 0 20px rgba(183, 240, 173, 0.4);
+    --shadow-inner-light: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+
+    /* ── Fonts ── */
+    --font-sans: "PlusJakartaSans";
+    --font-mono: "JetBrainsMono";
+  }
+}

@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Owner Dashboard - CleanerHQ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.plot.ly/plotly-3.1.1.min.js"></script>
+    <script>
+        window.FontAwesomeConfig = { autoReplaceSvg: 'nest' };
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            DEFAULT: '#2A5B4F', // Forest Teal
+                            dark: '#234E43',
+                            light: '#3D7A6B',
+                            glass: 'rgba(42, 91, 79, 0.95)'
+                        },
+                        secondary: {
+                            DEFAULT: '#B7F0AD', // Success/Accents
+                            dim: '#9AD690',
+                            light: '#E3F9DF'
+                        },
+                        accent: {
+                            bg: '#F0F7F2', // Card tints
+                            surface: '#F8F9FA',
+                            blue: '#DCEAF9',
+                            orange: '#F9EADC'
+                        },
+                        logo: '#5EBD6D',
+                        error: '#991B1B',
+                        warning: '#F59E0B',
+                        success: '#10B981',
+                        gray: {
+                            850: '#1F2937',
+                            950: '#0B1120'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'soft': '0 8px 24px -4px rgba(42, 91, 79, 0.08)',
+                        'card': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
+                        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.07)',
+                        'floating': '0 16px 48px -12px rgba(42, 91, 79, 0.25)',
+                        'glow': '0 0 15px rgba(183, 240, 173, 0.5)',
+                        'inner-light': 'inset 0 2px 4px 0 rgba(255, 255, 255, 0.3)'
+                    },
+                    backgroundImage: {
+                        'forest-gradient': 'linear-gradient(135deg, #2A5B4F 0%, #234E43 100%)',
+                        'glass-gradient': 'linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
+                        'card-shimmer': 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)'
+                    },
+                    borderRadius: {
+                        'xl': '16px',
+                        '2xl': '20px',
+                        '3xl': '24px',
+                    }
+                }
+            }
+        }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #F0F2F5;
+            -webkit-font-smoothing: antialiased;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        /* Hide scrollbar but keep functionality */
+        ::-webkit-scrollbar {
+            width: 0px;
+            background: transparent;
+        }
+        
+        .glass-header {
+            background: rgba(42, 91, 79, 0.95);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Custom safe area for notched devices */
+        .safe-top {
+            padding-top: max(env(safe-area-inset-top), 20px);
+        }
+        
+        .safe-bottom {
+            padding-bottom: max(env(safe-area-inset-bottom), 20px);
+        }
+
+        .profit-guard-gradient {
+            background: linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(240,247,242,1) 100%);
+        }
+    </style>
+</head>
+<body class="bg-[#F0F2F5] min-h-screen flex items-center justify-center p-4 sm:p-8">
+
+    <!-- Mobile Frame Container -->
+    <main id="owner-home-container" class="relative w-full max-w-[430px] h-[880px] bg-[#F8F9FA] sm:rounded-[36px] shadow-2xl overflow-hidden flex flex-col z-10 border-[6px] border-gray-900/5">
+        
+        <!-- Offline/Sync Indicator (Hidden by default) -->
+        <div id="sync-indicator" class="absolute top-0 left-0 w-full h-1 bg-gray-200 z-50">
+            <div class="h-full bg-secondary w-full animate-pulse"></div>
+        </div>
+
+        <!-- Header Section with Glassmorphism -->
+        <header id="header" class="relative z-30 bg-primary pt-safe-top pb-6 overflow-hidden rounded-b-[32px] shadow-soft shrink-0">
+            <!-- Background Gradient & Decor -->
+            <div class="absolute inset-0 bg-forest-gradient"></div>
+            <div class="absolute -top-24 -right-24 w-64 h-64 bg-[#B7F0AD] rounded-full blur-3xl opacity-20 pointer-events-none"></div>
+            <div class="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-[#234E43] to-transparent opacity-40 pointer-events-none"></div>
+            
+            <!-- Watermark Logo -->
+            <div class="absolute top-8 right-4 opacity-10 pointer-events-none transform rotate-12">
+                <i class="fa-solid fa-sparkles text-7xl text-white"></i>
+            </div>
+
+            <!-- Header Content -->
+            <div class="relative px-6 pt-8 pb-2 flex justify-between items-start">
+                <div class="flex flex-col">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="text-secondary font-semibold text-xs tracking-wide uppercase opacity-90">Owner Dashboard</span>
+                        <span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span>
+                    </div>
+                    <h1 class="text-2xl font-extrabold text-white tracking-tight leading-tight">Good Morning,<br>David</h1>
+                </div>
+                
+                <!-- Notification Bell with Count -->
+                <button class="relative w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-95 shadow-inner-light">
+                    <i class="fa-regular fa-bell text-lg"></i>
+                    <span class="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border border-[#2A5B4F]"></span>
+                </button>
+            </div>
+            
+            <!-- Quick Date Selector / Overview -->
+            <div class="px-6 mt-4 flex items-center justify-between text-white/80">
+                <div class="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-lg backdrop-blur-sm border border-white/5">
+                    <i class="fa-regular fa-calendar text-xs"></i>
+                    <span class="text-xs font-medium">Today, Feb 21</span>
+                    <i class="fa-solid fa-chevron-down text-[10px] ml-1"></i>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <span class="text-xs font-medium">On Track</span>
+                    <i class="fa-solid fa-circle-check text-secondary text-sm"></i>
+                </div>
+            </div>
+        </header>
+
+        <!-- Scrollable Content Area -->
+        <div class="flex-1 overflow-y-auto pt-6 pb-24 px-5 bg-[#F8F9FA] scroll-smooth" id="scroll-container">
+            
+            <!-- KPI Cards Grid -->
+            <section id="kpi-section" class="grid grid-cols-2 gap-3 mb-6">
+                <!-- Revenue Card (Primary Focus) -->
+                <div class="col-span-2 bg-white rounded-2xl p-4 shadow-card border border-gray-100 relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 w-24 h-24 bg-secondary/10 rounded-bl-[60px] -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+                    <div class="relative z-10">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="flex items-center gap-2">
+                                <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                                    <i class="fa-solid fa-chart-line text-sm"></i>
+                                </div>
+                                <span class="text-sm font-semibold text-gray-500">Total Revenue</span>
+                            </div>
+                            <!-- Profit Guard Shield: Green -->
+                            <div class="flex items-center gap-1 bg-green-50 px-2 py-1 rounded-md border border-green-100">
+                                <i class="fa-solid fa-shield-halved text-green-600 text-xs"></i>
+                                <span class="text-[10px] font-bold text-green-700 uppercase">Healthy</span>
+                            </div>
+                        </div>
+                        <div class="flex items-baseline gap-2 mt-1">
+                            <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight">$4,280<span class="text-lg text-gray-400 font-medium">.50</span></h2>
+                        </div>
+                        <div class="mt-3 h-1 w-full bg-gray-100 rounded-full overflow-hidden">
+                            <div class="h-full bg-primary w-[75%] rounded-full"></div>
+                        </div>
+                        <div class="flex justify-between mt-2 text-xs">
+                            <span class="text-gray-400">Daily Goal: $5,500</span>
+                            <span class="text-primary font-bold">+12% vs last Fri</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Profit Margin Card -->
+                <div class="bg-white rounded-2xl p-4 shadow-card border border-gray-100 flex flex-col justify-between h-32 relative overflow-hidden">
+                    <div class="absolute -bottom-4 -right-4 w-16 h-16 bg-blue-50 rounded-full opacity-50"></div>
+                    <div class="flex justify-between items-start">
+                        <span class="text-xs font-semibold text-gray-500">Net Profit</span>
+                        <i class="fa-solid fa-arrow-trend-up text-green-500 text-xs bg-green-50 p-1 rounded"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-bold text-gray-900">32<span class="text-sm text-gray-400">%</span></h3>
+                        <p class="text-[10px] text-gray-400 mt-1">Target: 30%</p>
+                    </div>
+                </div>
+
+                <!-- Unpaid Invoices Card (Alert State) -->
+                <div class="bg-white rounded-2xl p-4 shadow-card border border-red-100 flex flex-col justify-between h-32 relative overflow-hidden">
+                     <div class="absolute top-0 right-0 w-1.5 h-full bg-red-500/80"></div>
+                    <div class="flex justify-between items-start">
+                        <span class="text-xs font-semibold text-gray-500">Unpaid</span>
+                        <div class="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center">
+                            <span class="text-[10px] font-bold text-red-600">3</span>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-bold text-gray-900">$1,250</h3>
+                        <button class="mt-2 text-[10px] font-bold text-red-600 flex items-center gap-1 hover:underline">
+                            Review <i class="fa-solid fa-chevron-right text-[8px]"></i>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Quick Actions Chips -->
+            <section id="quick-actions" class="mb-6">
+                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 px-1">Quick Actions</h3>
+                <div class="flex gap-3 overflow-x-auto pb-2 -mx-5 px-5 no-scrollbar">
+                    <button class="flex-shrink-0 bg-primary text-white rounded-xl px-4 py-3 flex items-center gap-2 shadow-lg shadow-primary/20 active:scale-95 transition-transform">
+                        <i class="fa-solid fa-file-invoice-dollar"></i>
+                        <span class="text-sm font-semibold">Create Quote</span>
+                    </button>
+                    <button class="flex-shrink-0 bg-white border border-gray-200 text-gray-700 rounded-xl px-4 py-3 flex items-center gap-2 shadow-sm active:bg-gray-50 transition-colors">
+                        <i class="fa-solid fa-route text-blue-500"></i>
+                        <span class="text-sm font-semibold">Optimize Route</span>
+                    </button>
+                    <button class="flex-shrink-0 bg-white border border-gray-200 text-gray-700 rounded-xl px-4 py-3 flex items-center gap-2 shadow-sm active:bg-gray-50 transition-colors">
+                        <i class="fa-solid fa-users text-purple-500"></i>
+                        <span class="text-sm font-semibold">Message Team</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Today At A Glance (Compact List) -->
+            <section id="today-glance" class="mb-8">
+                <div class="flex items-center justify-between mb-4 px-1">
+                    <h3 class="text-lg font-bold text-gray-900">Today at a Glance</h3>
+                    <button class="text-xs font-bold text-primary bg-primary/5 px-2 py-1 rounded-md">View Schedule</button>
+                </div>
+
+                <div class="space-y-3">
+                    <!-- Item 1: Crew Status (Behind) -->
+                    <div class="bg-white rounded-xl p-3 border-l-4 border-l-warning shadow-card flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="relative">
+                                <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden border-2 border-white shadow-sm">
+                                    <i class="fa-solid fa-user text-gray-400"></i>
+                                </div>
+                                <span class="absolute -bottom-1 -right-1 w-4 h-4 bg-warning rounded-full border-2 border-white flex items-center justify-center">
+                                    <i class="fa-solid fa-clock text-[8px] text-white"></i>
+                                </span>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-bold text-gray-900">Team Alpha</h4>
+                                <p class="text-xs text-gray-500">Running 15m late • Downtown</p>
+                            </div>
+                        </div>
+                        <button class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-primary transition-colors">
+                            <i class="fa-solid fa-location-dot"></i>
+                        </button>
+                    </div>
+
+                    <!-- Item 2: Route Profitability -->
+                    <div class="bg-white rounded-xl p-3 border-l-4 border-l-secondary shadow-card flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-secondary/20 flex items-center justify-center text-primary-dark">
+                                <i class="fa-solid fa-sack-dollar"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-bold text-gray-900">Route B Profitability</h4>
+                                <p class="text-xs text-gray-500">High margin jobs today</p>
+                            </div>
+                        </div>
+                        <div class="flex flex-col items-end">
+                            <span class="text-sm font-bold text-primary-dark">42%</span>
+                            <span class="text-[10px] text-gray-400">Margin</span>
+                        </div>
+                    </div>
+
+                    <!-- Item 3: Job Completion -->
+                    <div class="bg-white rounded-xl p-3 border-l-4 border-l-gray-200 shadow-card flex items-center justify-between opacity-80">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500">
+                                <i class="fa-solid fa-check"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-bold text-gray-900">Jobs Completed</h4>
+                                <p class="text-xs text-gray-500">8 of 12 jobs finished</p>
+                            </div>
+                        </div>
+                        <div class="flex flex-col items-end">
+                            <span class="text-sm font-bold text-gray-600">66%</span>
+                            <div class="w-12 h-1.5 bg-gray-100 rounded-full mt-1 overflow-hidden">
+                                <div class="h-full bg-primary w-[66%]"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Alerts Section -->
+            <section id="alerts-section" class="mb-24">
+                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 px-1">System Alerts</h3>
+                <div class="bg-red-50 rounded-xl p-4 border border-red-100 flex gap-3 items-start">
+                    <i class="fa-solid fa-triangle-exclamation text-red-500 mt-0.5"></i>
+                    <div class="flex-1">
+                        <h4 class="text-sm font-bold text-red-800">Vehicle Maintenance Required</h4>
+                        <p class="text-xs text-red-600 mt-1 leading-relaxed">Van #4 is due for oil change. Schedule service to avoid downtime.</p>
+                        <button class="mt-2 text-xs font-bold text-red-700 underline decoration-red-300">Schedule Now</button>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+
+        <!-- Floating Action Button (AI Copilot) - Consistent Position -->
+        <button class="absolute bottom-24 right-5 w-14 h-14 bg-gradient-to-br from-primary to-primary-light rounded-full shadow-floating flex items-center justify-center text-white z-40 animate-float hover:scale-110 transition-transform active:scale-90 border-2 border-white/20">
+            <i class="fa-solid fa-sparkles text-xl"></i>
+            <span class="absolute inset-0 rounded-full border border-white/40 animate-ping opacity-75"></span>
+        </button>
+
+        <!-- Bottom Navigation Bar - Owner Version -->
+        <nav id="footer" class="absolute bottom-0 w-full bg-white border-t border-gray-100 px-2 py-2 pb-safe-bottom z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.03)]">
+            <div class="flex justify-around items-center h-14">
+                <!-- Owner Home (Active) -->
+                <button class="flex flex-col items-center justify-center w-16 h-full gap-1 text-primary">
+                    <div class="w-10 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
+                        <i class="fa-solid fa-chart-pie text-lg"></i>
+                    </div>
+                    <span class="text-[10px] font-bold tracking-tight">Home</span>
+                </button>
+
+                <!-- Schedule & Route -->
+                <button class="flex flex-col items-center justify-center w-16 h-full gap-1 text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fa-regular fa-calendar-days text-xl"></i>
+                    <span class="text-[10px] font-medium">Schedule</span>
+                </button>
+
+                <!-- Quotes & Invoicing -->
+                <button class="flex flex-col items-center justify-center w-16 h-full gap-1 text-gray-400 hover:text-gray-600 transition-colors">
+                    <div class="relative">
+                        <i class="fa-solid fa-file-invoice-dollar text-xl"></i>
+                        <span class="absolute -top-1 -right-1 w-2 h-2 bg-secondary rounded-full border border-white"></span>
+                    </div>
+                    <span class="text-[10px] font-medium">Quotes</span>
+                </button>
+
+                <!-- Clients -->
+                <button class="flex flex-col items-center justify-center w-16 h-full gap-1 text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fa-regular fa-user text-xl"></i>
+                    <span class="text-[10px] font-medium">Clients</span>
+                </button>
+
+                <!-- More -->
+                <button class="flex flex-col items-center justify-center w-16 h-full gap-1 text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fa-solid fa-bars text-xl"></i>
+                    <span class="text-[10px] font-medium">More</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Glass Overlay for Modals (Hidden) -->
+        <div id="modal-overlay" class="hidden absolute inset-0 bg-gray-900/40 backdrop-blur-sm z-50 animate-fade-in"></div>
+
+    </main>
+
+    <script>
+        // Simple Interaction Logic
+        document.addEventListener('DOMContentLoaded', () => {
+            // Animation for cards on load
+            const cards = document.querySelectorAll('.shadow-card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    card.style.transition = 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1)';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, 100 * index);
+            });
+
+            // Button interaction
+            const buttons = document.querySelectorAll('button');
+            buttons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // Simple tactile response
+                    this.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        this.style.transform = 'scale(1)';
+                    }, 150);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

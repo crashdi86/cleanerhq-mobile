@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Home - CleanerHQ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        window.FontAwesomeConfig = { autoReplaceSvg: 'nest' };
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            DEFAULT: '#2A5B4F', // Forest Teal
+                            dark: '#234E43',
+                            light: '#3D7A6B',
+                            glass: 'rgba(42, 91, 79, 0.85)'
+                        },
+                        secondary: {
+                            DEFAULT: '#B7F0AD', // Success/Accents
+                            dim: '#9AD690',
+                            light: '#E3F9DF'
+                        },
+                        accent: {
+                            bg: '#F0F7F2', // Card tints
+                            surface: '#F8F9FA',
+                            purple: '#EBDCF9', // Adapted from inspiration
+                            pink: '#F9DCE8'     // Adapted from inspiration
+                        },
+                        logo: '#5EBD6D',
+                        error: '#991B1B',
+                        warning: '#F59E0B',
+                        gray: {
+                            850: '#1F2937',
+                            950: '#0B1120'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'soft': '0 8px 24px -4px rgba(42, 91, 79, 0.08)',
+                        'card': '0 2px 12px -2px rgba(0, 0, 0, 0.04)',
+                        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.07)',
+                        'floating': '0 16px 48px -12px rgba(42, 91, 79, 0.25)',
+                        'glow': '0 0 15px rgba(183, 240, 173, 0.5)',
+                        'inner-light': 'inset 0 2px 4px 0 rgba(255, 255, 255, 0.3)'
+                    },
+                    backgroundImage: {
+                        'forest-gradient': 'linear-gradient(135deg, #2A5B4F 0%, #234E43 100%)',
+                        'glass-gradient': 'linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
+                        'card-shimmer': 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)'
+                    },
+                    spacing: {
+                        '18': '4.5rem',
+                        '22': '5.5rem',
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        'slide-up': 'slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-6px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #F8F9FA;
+            -webkit-font-smoothing: antialiased;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        /* Hide scrollbar but keep functionality */
+        ::-webkit-scrollbar {
+            width: 0px;
+            background: transparent;
+        }
+        
+        .glass-header {
+            background: rgba(42, 91, 79, 0.95);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+
+        .timeline-line {
+            position: absolute;
+            left: 27px;
+            top: 40px;
+            bottom: -20px;
+            width: 2px;
+            background: #E5E7EB;
+            z-index: 0;
+        }
+
+        .timeline-item:last-child .timeline-line {
+            display: none;
+        }
+
+        /* Smooth scroll behavior */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Custom safe area for notched devices */
+        .safe-top {
+            padding-top: max(env(safe-area-inset-top), 20px);
+        }
+        
+        .safe-bottom {
+            padding-bottom: max(env(safe-area-inset-bottom), 20px);
+        }
+
+        /* Tap target sizing */
+        .tap-target {
+            min-height: 44px;
+            min-width: 44px;
+        }
+    </style>
+</head>
+<body class="bg-[#F0F2F5] min-h-screen flex items-center justify-center">
+
+    <!-- Mobile Frame Container -->
+    <main id="staff-home-container" class="relative w-full max-w-[430px] h-[100vh] sm:h-[880px] bg-[#F8F9FA] sm:rounded-[36px] shadow-2xl overflow-hidden flex flex-col z-10">
+        
+        <!-- Offline/Sync Indicator (Hidden by default) -->
+        <div id="sync-indicator" class="absolute top-0 left-0 w-full h-1 bg-gray-200 z-50">
+            <div class="h-full bg-secondary w-full animate-pulse"></div>
+        </div>
+
+        <!-- Header Section with Glassmorphism -->
+        <header class="relative z-30 bg-primary pt-safe-top pb-6 overflow-hidden rounded-b-[32px] shadow-soft">
+            <!-- Background Gradient & Decor -->
+            <div class="absolute inset-0 bg-forest-gradient"></div>
+            <div class="absolute -top-24 -right-24 w-64 h-64 bg-[#B7F0AD] rounded-full blur-3xl opacity-20 pointer-events-none"></div>
+            <div class="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-[#234E43] to-transparent opacity-40 pointer-events-none"></div>
+            
+            <!-- Watermark Logo -->
+            <div class="absolute top-12 right-6 opacity-10 pointer-events-none">
+                <i class="fa-solid fa-sparkles text-8xl text-white"></i>
+            </div>
+
+            <!-- Header Content -->
+            <div class="relative px-6 pt-12 pb-4 flex justify-between items-start">
+                <div class="flex flex-col">
+                    <span class="text-secondary font-semibold text-sm mb-1 tracking-wide uppercase opacity-90">Good Morning</span>
+                    <h1 class="text-3xl font-extrabold text-white tracking-tight leading-tight">Maria R.</h1>
+                </div>
+                
+                <!-- Notification Bell with Count -->
+                <button class="relative w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-95 shadow-inner-light">
+                    <i class="fa-regular fa-bell text-xl"></i>
+                    <span class="absolute top-2 right-3 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[#2A5B4F]"></span>
+                </button>
+            </div>
+
+            <!-- "Next Job" Card - Floating Overlap -->
+            <div class="px-6 mt-2 relative z-40 transform translate-y-12">
+                <div class="bg-white rounded-[24px] p-5 shadow-floating border border-gray-100 relative overflow-hidden group">
+                    <!-- Status Strip -->
+                    <div class="absolute top-0 left-0 w-1.5 h-full bg-primary"></div>
+                    
+                    <!-- Card Header -->
+                    <div class="flex justify-between items-start mb-4 pl-2">
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="bg-primary/10 text-primary text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider">Next Job</span>
+                                <span class="text-gray-400 text-xs font-medium"><i class="fa-regular fa-clock mr-1"></i> Starts in 25m</span>
+                            </div>
+                            <h2 class="text-xl font-bold text-gray-900 leading-tight">The Anderson Residence</h2>
+                        </div>
+                        <div class="w-10 h-10 rounded-full bg-accent-bg flex items-center justify-center text-primary shadow-sm">
+                            <i class="fa-solid fa-location-arrow text-sm"></i>
+                        </div>
+                    </div>
+
+                    <!-- Critical Info Grid -->
+                    <div class="grid grid-cols-2 gap-3 mb-5 pl-2">
+                        <div class="bg-primary/5 rounded-xl p-3 border border-primary/20">
+                            <p class="text-[10px] text-primary/70 font-bold uppercase mb-1">Gate Code</p>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xl font-mono font-black text-primary-dark">#4829</span>
+                                <button class="text-primary hover:text-primary-dark active:scale-90 transition-transform p-1">
+                                    <i class="fa-regular fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="bg-gray-50 rounded-xl p-3 border border-gray-100">
+                            <p class="text-[10px] text-gray-400 font-bold uppercase mb-1">Arrival</p>
+                            <span class="text-lg font-bold text-gray-800">9:00 AM</span>
+                        </div>
+                    </div>
+
+                    <!-- Address -->
+                    <div class="flex items-start gap-3 mb-6 pl-2">
+                        <i class="fa-solid fa-map-pin text-gray-400 mt-1"></i>
+                        <p class="text-sm text-gray-600 font-medium leading-relaxed">
+                            4209 Highland Park Dr,<br>Austin, TX 78731
+                        </p>
+                    </div>
+
+                    <!-- Primary Action: Clock In -->
+                    <button class="w-full bg-primary hover:bg-primary-dark text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/30 flex items-center justify-center gap-3 active:scale-[0.98] transition-all relative overflow-hidden">
+                        <div class="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                        <i class="fa-solid fa-stopwatch text-xl"></i>
+                        <span class="text-lg tracking-wide">Tap to Clock In</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Scrollable Content Area -->
+        <div class="flex-1 overflow-y-auto pt-16 pb-24 px-6 bg-[#F8F9FA] scroll-smooth" id="scroll-container">
+            
+            <!-- Quick Actions Chips -->
+            <div class="flex gap-3 overflow-x-auto pb-4 -mx-6 px-6 no-scrollbar mb-4">
+                <button class="flex-shrink-0 bg-white border border-gray-200 rounded-full px-4 py-2.5 flex items-center gap-2 shadow-sm active:bg-gray-50 transition-colors">
+                    <i class="fa-solid fa-car text-primary text-sm"></i>
+                    <span class="text-sm font-semibold text-gray-700">On My Way</span>
+                </button>
+                <button class="flex-shrink-0 bg-white border border-gray-200 rounded-full px-4 py-2.5 flex items-center gap-2 shadow-sm active:bg-gray-50 transition-colors">
+                    <i class="fa-solid fa-person-running text-warning text-sm"></i>
+                    <span class="text-sm font-semibold text-gray-700">Running Late</span>
+                </button>
+                <button class="flex-shrink-0 bg-white border border-gray-200 rounded-full px-4 py-2.5 flex items-center gap-2 shadow-sm active:bg-gray-50 transition-colors">
+                    <i class="fa-solid fa-key text-gray-500 text-sm"></i>
+                    <span class="text-sm font-semibold text-gray-700">Gate Codes</span>
+                </button>
+            </div>
+
+            <!-- Today's Schedule Section -->
+            <section class="mb-8">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-lg font-bold text-gray-900">Today's Route</h3>
+                    <span class="text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-1 rounded">3 Jobs</span>
+                </div>
+
+                <div class="space-y-0 relative">
+                    <!-- Timeline Item 1 (Upcoming - Next) -->
+                    <div class="timeline-item relative pl-14 pb-8 group">
+                        <!-- Line -->
+                        <div class="timeline-line border-l-2 border-dashed border-primary/30"></div>
+                        <!-- Dot -->
+                        <div class="absolute left-4 top-1 w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold shadow-md z-10 border-2 border-[#F8F9FA]">1</div>
+                        
+                        <!-- Card Content -->
+                        <div class="bg-white rounded-2xl p-4 border border-primary/20 shadow-soft">
+                            <div class="flex justify-between items-start mb-2">
+                                <h4 class="font-bold text-gray-900">The Anderson Residence</h4>
+                                <span class="text-xs font-bold text-primary bg-primary/5 px-2 py-1 rounded">9:00 AM</span>
+                            </div>
+                            <p class="text-xs text-gray-500 mb-3 line-clamp-1">Deep Clean • 3.5 hrs</p>
+                            <div class="flex items-center gap-2">
+                                <span class="h-6 px-2 rounded-md bg-gray-100 text-gray-500 text-[10px] font-bold flex items-center uppercase tracking-wide">
+                                    Upcoming
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Timeline Item 2 -->
+                    <div class="timeline-item relative pl-14 pb-8 opacity-70">
+                        <!-- Line -->
+                        <div class="timeline-line"></div>
+                        <!-- Dot -->
+                        <div class="absolute left-4 top-1 w-8 h-8 rounded-full bg-white text-gray-400 border-2 border-gray-200 flex items-center justify-center text-sm font-bold z-10">2</div>
+                        
+                        <!-- Card Content -->
+                        <div class="bg-white rounded-2xl p-4 border border-gray-100 shadow-card">
+                            <div class="flex justify-between items-start mb-2">
+                                <h4 class="font-bold text-gray-900">Downtown Tech Offices</h4>
+                                <span class="text-xs font-bold text-gray-500 bg-gray-50 px-2 py-1 rounded">1:30 PM</span>
+                            </div>
+                            <p class="text-xs text-gray-500 mb-3 line-clamp-1">Standard Office Clean • 2.0 hrs</p>
+                            <div class="flex items-center gap-2">
+                                <span class="h-6 px-2 rounded-md bg-gray-100 text-gray-400 text-[10px] font-bold flex items-center uppercase tracking-wide">
+                                    Scheduled
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Timeline Item 3 -->
+                    <div class="timeline-item relative pl-14 pb-2 opacity-70">
+                        <!-- Line -->
+                        <div class="timeline-line"></div>
+                        <!-- Dot -->
+                        <div class="absolute left-4 top-1 w-8 h-8 rounded-full bg-white text-gray-400 border-2 border-gray-200 flex items-center justify-center text-sm font-bold z-10">3</div>
+                        
+                        <!-- Card Content -->
+                        <div class="bg-white rounded-2xl p-4 border border-gray-100 shadow-card">
+                            <div class="flex justify-between items-start mb-2">
+                                <h4 class="font-bold text-gray-900">Miller Apartment</h4>
+                                <span class="text-xs font-bold text-gray-500 bg-gray-50 px-2 py-1 rounded">4:15 PM</span>
+                            </div>
+                            <p class="text-xs text-gray-500 mb-3 line-clamp-1">Move-out Clean • 4.0 hrs</p>
+                            <div class="flex items-center gap-2">
+                                <span class="h-6 px-2 rounded-md bg-gray-100 text-gray-400 text-[10px] font-bold flex items-center uppercase tracking-wide">
+                                    Scheduled
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Team Status / Updates -->
+            <section class="mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-bold text-gray-900">Team Updates</h3>
+                </div>
+                <div class="bg-white rounded-2xl p-4 border border-gray-100 shadow-card flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 flex-shrink-0">
+                        <i class="fa-solid fa-bullhorn"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm font-semibold text-gray-900">Supplies Restocked</p>
+                        <p class="text-xs text-gray-500 mt-0.5">New cleaning kits available at HQ.</p>
+                    </div>
+                    <span class="text-[10px] text-gray-400 font-medium">2h ago</span>
+                </div>
+            </section>
+
+        </div>
+
+        <!-- Floating Action Button (AI Copilot) -->
+        <button class="absolute bottom-24 right-5 w-14 h-14 bg-gradient-to-br from-primary to-primary-light rounded-full shadow-floating flex items-center justify-center text-white z-40 animate-float hover:scale-110 transition-transform active:scale-90 border-2 border-white/20">
+            <i class="fa-solid fa-sparkles text-xl"></i>
+            <!-- Pulse Effect -->
+            <span class="absolute inset-0 rounded-full border border-white/40 animate-ping opacity-75"></span>
+        </button>
+
+        <!-- SOS Button (Moved for one-handed accessibility) -->
+        <button class="absolute bottom-44 right-5 w-12 h-12 rounded-full bg-red-600 shadow-floating flex items-center justify-center text-white z-40 hover:bg-red-700 transition-colors duration-300 border-2 border-white" title="Emergency SOS">
+            <i class="fa-solid fa-shield-halved text-lg"></i>
+        </button>
+
+        <!-- Bottom Navigation Bar -->
+        <nav class="absolute bottom-0 w-full bg-white border-t border-gray-100 px-2 py-2 pb-safe-bottom z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.03)]">
+            <div class="flex justify-around items-center h-14">
+                <!-- Home (Active) -->
+                <button class="flex flex-col items-center justify-center w-16 h-full gap-1 text-primary">
+                    <div class="w-10 h-8 rounded-xl bg-primary/10 flex items-center justify-center mb-0.5">
+                        <i class="fa-solid fa-house text-lg"></i>
+                    </div>
+                    <span class="text-[10px] font-bold tracking-tight">Home</span>
+                </button>
+
+                <!-- Schedule -->
+                <button class="flex flex-col items-center justify-center w-16 h-full gap-1 text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fa-regular fa-calendar text-xl mb-0.5"></i>
+                    <!-- <span class="text-[10px] font-medium">Schedule</span> -->
+                </button>
+
+                <!-- Jobs -->
+                <button class="flex flex-col items-center justify-center w-16 h-full gap-1 text-gray-400 hover:text-gray-600 transition-colors">
+                    <div class="relative">
+                        <i class="fa-solid fa-list-check text-xl mb-0.5"></i>
+                        <span class="absolute -top-1 -right-1 w-2 h-2 bg-secondary rounded-full border border-white"></span>
+                    </div>
+                    <!-- <span class="text-[10px] font-medium">Jobs</span> -->
+                </button>
+
+                <!-- Chat -->
+                <button class="flex flex-col items-center justify-center w-16 h-full gap-1 text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fa-regular fa-comment-dots text-xl mb-0.5"></i>
+                    <!-- <span class="text-[10px] font-medium">Chat</span> -->
+                </button>
+
+                <!-- More -->
+                <button class="flex flex-col items-center justify-center w-16 h-full gap-1 text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fa-solid fa-bars text-xl mb-0.5"></i>
+                    <!-- <span class="text-[10px] font-medium">More</span> -->
+                </button>
+            </div>
+        </nav>
+
+        <!-- Glass Overlay for Modals (Hidden) -->
+        <div id="modal-overlay" class="hidden absolute inset-0 bg-gray-900/40 backdrop-blur-sm z-50 animate-fade-in"></div>
+
+    </main>
+
+    <script>
+        // Simple Interaction Logic for Demo
+        document.addEventListener('DOMContentLoaded', () => {
+            const clockInBtn = document.querySelector('button i.fa-stopwatch').parentElement;
+            
+            clockInBtn.addEventListener('click', function() {
+                // Haptic feedback simulation
+                if (navigator.vibrate) navigator.vibrate(50);
+                
+                // Visual feedback
+                this.classList.add('scale-95');
+                setTimeout(() => this.classList.remove('scale-95'), 150);
+                
+                // Change state to loading/clocking in
+                const originalContent = this.innerHTML;
+                this.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-xl"></i><span class="text-lg tracking-wide">Clocking In...</span>';
+                this.classList.remove('bg-primary');
+                this.classList.add('bg-primary-dark');
+                
+                setTimeout(() => {
+                    // Success State
+                    this.innerHTML = '<i class="fa-solid fa-check text-xl"></i><span class="text-lg tracking-wide">You are Clocked In!</span>';
+                    this.classList.remove('bg-primary-dark');
+                    this.classList.add('bg-secondary', 'text-primary-dark');
+                    
+                    // Confetti effect would go here
+                }, 1500);
+            });
+        });
+    </script>
+</body>
+</html>
