@@ -25,6 +25,14 @@ export function TodayGlance({ data, isLoading }: TodayGlanceProps) {
     router.push("/(app)/(tabs)/schedule" as never);
   }, [router]);
 
+  const handleNavigateSchedule = useCallback(() => {
+    router.push("/(app)/(tabs)/schedule" as never);
+  }, [router]);
+
+  const handleNavigateJobs = useCallback(() => {
+    router.push("/(app)/(tabs)/route" as never);
+  }, [router]);
+
   if (isLoading) {
     return <TodayGlanceSkeleton />;
   }
@@ -53,107 +61,111 @@ export function TodayGlance({ data, isLoading }: TodayGlanceProps) {
       {/* Glance Items */}
       <View className="gap-3">
         {/* Crew Status Item */}
-        <View
-          className="bg-white rounded-xl p-3 flex-row items-center"
-          style={[styles.cardShadow, styles.borderLeftWarning]}
-        >
-          {/* Avatar with warning badge */}
-          <View className="relative mr-3">
-            <View className="w-10 h-10 rounded-full bg-gray-200 items-center justify-center">
-              <FontAwesomeIcon icon={faUser} size={16} color="#9CA3AF" />
+        <Pressable onPress={handleNavigateSchedule} style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}>
+          <View
+            className="bg-white rounded-xl p-3 flex-row items-center"
+            style={[styles.cardShadow, styles.borderLeftWarning]}
+          >
+            {/* Avatar with warning badge */}
+            <View className="relative mr-3">
+              <View className="w-10 h-10 rounded-full bg-gray-200 items-center justify-center">
+                <FontAwesomeIcon icon={faUser} size={16} color="#9CA3AF" />
+              </View>
+              {/* Warning badge */}
+              <View
+                className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full items-center justify-center"
+                style={styles.warningBadge}
+              >
+                <FontAwesomeIcon icon={faClock} size={7} color="#FFFFFF" />
+              </View>
             </View>
-            {/* Warning badge */}
-            <View
-              className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full items-center justify-center"
-              style={styles.warningBadge}
-            >
-              <FontAwesomeIcon icon={faClock} size={7} color="#FFFFFF" />
+
+            {/* Content */}
+            <View className="flex-1">
+              <Text className="text-sm font-bold text-gray-900">Team Alpha</Text>
+              <Text className="text-xs text-gray-500">
+                Running 15m late - Downtown
+              </Text>
             </View>
-          </View>
 
-          {/* Content */}
-          <View className="flex-1">
-            <Text className="text-sm font-bold text-gray-900">Team Alpha</Text>
-            <Text className="text-xs text-gray-500">
-              Running 15m late - Downtown
-            </Text>
-          </View>
-
-          {/* Location button */}
-          <Pressable>
+            {/* Location icon */}
             <View className="w-8 h-8 rounded-full bg-gray-50 items-center justify-center">
               <FontAwesomeIcon icon={faLocationDot} size={14} color="#6B7280" />
             </View>
-          </Pressable>
-        </View>
+          </View>
+        </Pressable>
 
         {/* Route Profitability Item */}
-        <View
-          className="bg-white rounded-xl p-3 flex-row items-center"
-          style={[styles.cardShadow, styles.borderLeftSecondary]}
-        >
-          {/* Icon */}
-          <View className="mr-3">
-            <View
-              className="w-10 h-10 rounded-full items-center justify-center"
-              style={styles.profitIconBg}
-            >
-              <FontAwesomeIcon icon={faSackDollar} size={16} color="#2A5B4F" />
+        <Pressable onPress={handleNavigateJobs} style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}>
+          <View
+            className="bg-white rounded-xl p-3 flex-row items-center"
+            style={[styles.cardShadow, styles.borderLeftSecondary]}
+          >
+            {/* Icon */}
+            <View className="mr-3">
+              <View
+                className="w-10 h-10 rounded-full items-center justify-center"
+                style={styles.profitIconBg}
+              >
+                <FontAwesomeIcon icon={faSackDollar} size={16} color="#2A5B4F" />
+              </View>
+            </View>
+
+            {/* Content */}
+            <View className="flex-1">
+              <Text className="text-sm font-bold text-gray-900">
+                Route B Profitability
+              </Text>
+              <Text className="text-xs text-gray-500">High margin jobs today</Text>
+            </View>
+
+            {/* Value */}
+            <View className="items-end">
+              <Text className="text-sm font-bold" style={styles.primaryDarkText}>
+                42%
+              </Text>
+              <Text style={styles.marginLabel}>Margin</Text>
             </View>
           </View>
-
-          {/* Content */}
-          <View className="flex-1">
-            <Text className="text-sm font-bold text-gray-900">
-              Route B Profitability
-            </Text>
-            <Text className="text-xs text-gray-500">High margin jobs today</Text>
-          </View>
-
-          {/* Value */}
-          <View className="items-end">
-            <Text className="text-sm font-bold" style={styles.primaryDarkText}>
-              42%
-            </Text>
-            <Text style={styles.marginLabel}>Margin</Text>
-          </View>
-        </View>
+        </Pressable>
 
         {/* Job Completion Item */}
-        <View
-          className="bg-white rounded-xl p-3 flex-row items-center"
-          style={[styles.cardShadow, styles.borderLeftGray, styles.reducedOpacity]}
-        >
-          {/* Icon */}
-          <View className="mr-3">
-            <View className="w-10 h-10 rounded-full bg-gray-100 items-center justify-center">
-              <FontAwesomeIcon icon={faCheck} size={16} color="#6B7280" />
+        <Pressable onPress={handleNavigateSchedule} style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}>
+          <View
+            className="bg-white rounded-xl p-3 flex-row items-center"
+            style={[styles.cardShadow, styles.borderLeftGray, styles.reducedOpacity]}
+          >
+            {/* Icon */}
+            <View className="mr-3">
+              <View className="w-10 h-10 rounded-full bg-gray-100 items-center justify-center">
+                <FontAwesomeIcon icon={faCheck} size={16} color="#6B7280" />
+              </View>
+            </View>
+
+            {/* Content */}
+            <View className="flex-1">
+              <Text className="text-sm font-bold text-gray-900">
+                Jobs Completed
+              </Text>
+              <Text className="text-xs text-gray-500">
+                {completedJobs} of {todayJobs} jobs done today
+              </Text>
+            </View>
+
+            {/* Progress bar */}
+            <View className="items-end">
+              <View className="w-12 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                <View
+                  className="h-full rounded-full"
+                  style={[
+                    styles.progressFill,
+                    { width: `${completionProgress * 100}%` },
+                  ]}
+                />
+              </View>
             </View>
           </View>
-
-          {/* Content */}
-          <View className="flex-1">
-            <Text className="text-sm font-bold text-gray-900">
-              Jobs Completed
-            </Text>
-            <Text className="text-xs text-gray-500">
-              {completedJobs} of {todayJobs} jobs done today
-            </Text>
-          </View>
-
-          {/* Progress bar */}
-          <View className="items-end">
-            <View className="w-12 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-              <View
-                className="h-full rounded-full"
-                style={[
-                  styles.progressFill,
-                  { width: `${completionProgress * 100}%` },
-                ]}
-              />
-            </View>
-          </View>
-        </View>
+        </Pressable>
       </View>
     </View>
   );
