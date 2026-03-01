@@ -4,6 +4,7 @@ import {
   Pressable,
   Switch,
   StyleSheet,
+  ScrollView,
 } from "react-native";
 import { View, Text } from "@/tw";
 import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
@@ -121,7 +122,106 @@ export default function MoreScreen() {
         </View>
       </View>
 
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 16 }}
+      >
       {/* Divider */}
+      <View className="h-px bg-border mx-6" />
+
+      {/* CRM Section */}
+      <View className="px-6 pt-6">
+        <Text className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-3">
+          CRM
+        </Text>
+
+        {/* Clients */}
+        <Pressable
+          onPress={() => router.push("/accounts" as never)}
+          className="flex-row items-center justify-between py-4"
+        >
+          <View className="flex-row items-center gap-3">
+            <View
+              className="items-center justify-center rounded-xl"
+              style={styles.settingIcon}
+            >
+              <FontAwesomeIcon
+                icon="building"
+                size={18}
+                color="#2A5B4F"
+              />
+            </View>
+            <Text className="text-base font-medium text-text-primary">
+              Clients
+            </Text>
+          </View>
+          <FontAwesomeIcon
+            icon="chevron-right"
+            size={14}
+            color="#9CA3AF"
+          />
+        </Pressable>
+
+        <View className="h-px bg-border" />
+
+        {/* Contacts */}
+        <Pressable
+          onPress={() => router.push("/contacts" as never)}
+          className="flex-row items-center justify-between py-4"
+        >
+          <View className="flex-row items-center gap-3">
+            <View
+              className="items-center justify-center rounded-xl"
+              style={styles.settingIcon}
+            >
+              <FontAwesomeIcon
+                icon="address-book"
+                size={18}
+                color="#2A5B4F"
+              />
+            </View>
+            <Text className="text-base font-medium text-text-primary">
+              Contacts
+            </Text>
+          </View>
+          <FontAwesomeIcon
+            icon="chevron-right"
+            size={14}
+            color="#9CA3AF"
+          />
+        </Pressable>
+
+        <View className="h-px bg-border" />
+
+        {/* Search CRM */}
+        <Pressable
+          onPress={() => router.push("/crm-search" as never)}
+          className="flex-row items-center justify-between py-4"
+        >
+          <View className="flex-row items-center gap-3">
+            <View
+              className="items-center justify-center rounded-xl"
+              style={styles.settingIcon}
+            >
+              <FontAwesomeIcon
+                icon="magnifying-glass"
+                size={18}
+                color="#2A5B4F"
+              />
+            </View>
+            <Text className="text-base font-medium text-text-primary">
+              Search CRM
+            </Text>
+          </View>
+          <FontAwesomeIcon
+            icon="chevron-right"
+            size={14}
+            color="#9CA3AF"
+          />
+        </Pressable>
+      </View>
+
+      {/* Divider between CRM and Settings */}
       <View className="h-px bg-border mx-6" />
 
       {/* Settings Section */}
@@ -293,7 +393,7 @@ export default function MoreScreen() {
       </View>
 
       {/* Logout Button */}
-      <View className="px-6 mt-auto" style={{ paddingBottom: insets.bottom + 24 }}>
+      <View className="px-6 mt-6" style={{ paddingBottom: insets.bottom + 24 }}>
         <Pressable
           onPress={handleLogout}
           style={({ pressed }) => [
@@ -309,6 +409,7 @@ export default function MoreScreen() {
           <Text style={styles.logoutText}>Sign Out</Text>
         </Pressable>
       </View>
+      </ScrollView>
 
       {/* SOS Disclaimer Modal (read-only from settings) */}
       <SOSDisclaimerModal

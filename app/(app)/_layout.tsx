@@ -65,7 +65,10 @@ export default function AppLayout() {
           }}
         />
         <Stack.Screen name="time-history" />
+        <Stack.Screen name="accounts/index" />
         <Stack.Screen name="accounts/[id]" />
+        <Stack.Screen name="contacts/index" />
+        <Stack.Screen name="crm-search" />
         <Stack.Screen name="sos-dashboard" />
         <Stack.Screen name="sos-detail" />
         <Stack.Screen name="notifications" />

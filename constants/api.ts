@@ -42,6 +42,8 @@ export const ENDPOINTS = {
   ACCOUNTS: "/accounts",
   ACCOUNT_DETAIL: (id: string) => `/accounts/${id}` as const,
   ACCOUNT_NOTES: (id: string) => `/accounts/${id}/notes` as const,
+  CONTACTS: "/contacts",
+  CRM_SEARCH: "/crm/search",
   TEAM: "/team",
 
   // Time tracking
@@ -66,6 +68,10 @@ export const ENDPOINTS = {
   NOTIFICATIONS_COUNT: "/notifications/count",
   NOTIFICATION_READ: (id: string) => `/notifications/${id}/read` as const,
   NOTIFICATIONS_READ_ALL: "/notifications/read-all",
+
+  // Route (M-10)
+  ROUTE_TODAY: "/route/today",
+  ROUTE_OPTIMIZE: "/route/optimize",
 
   // Sync
   DELTA_SYNC: "/sync/delta",

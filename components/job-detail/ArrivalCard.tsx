@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, Platform, Linking } from "react-native";
+import { StyleSheet, Platform } from "react-native";
 import { View, Text, Pressable } from "@/tw";
 import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
 import {
@@ -11,24 +11,13 @@ import { LinearGradient } from "expo-linear-gradient";
 import * as Clipboard from "expo-clipboard";
 import { showToast } from "@/store/toast-store";
 import { formatFullAddress } from "@/lib/job-actions";
+import { openNativeMaps } from "@/lib/utils/navigation";
 import { ContactActions } from "@/components/job-detail/ContactActions";
 import type { ServiceAddress, ClientContact } from "@/lib/api/types";
 
 interface ArrivalCardProps {
   serviceAddress: ServiceAddress;
   clientContact: ClientContact | null;
-}
-
-function openNavigation(lat: number, lng: number): void {
-  const action = Platform.select({
-    ios: () => Linking.openURL(`maps://app?daddr=${lat},${lng}`),
-    android: () => Linking.openURL(`google.navigation:q=${lat},${lng}`),
-    default: () =>
-      Linking.openURL(
-        `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`
-      ),
-  });
-  void action();
 }
 
 async function copyAddress(address: string): Promise<void> {
@@ -109,7 +98,7 @@ export function ArrivalCard({
 
         {/* Navigate button */}
         <Pressable
-          onPress={() => openNavigation(lat, lng)}
+          onPress={() => openNativeMaps(lat, lng)}
           className="absolute bottom-2 right-2 flex-row items-center gap-1.5 rounded-xl px-3 py-1.5"
           style={styles.navigateButton}
         >

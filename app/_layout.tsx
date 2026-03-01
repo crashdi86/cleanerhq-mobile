@@ -86,6 +86,25 @@ import {
   // M-09 notification icons
   faCheckDouble,
   faXmark,
+  // M-10 route icons
+  faWandMagicSparkles,
+  faFlagCheckered,
+  faMap,
+  faRotateRight,
+  // M-11 CRM icons
+  faBuilding,
+  faAddressBook,
+  faMagnifyingGlass,
+  faGlobe,
+  faIndustry,
+  faArrowDownShortWide,
+  faUser,
+  faMapMarkerAlt,
+  faDollarSign,
+  faCalendarCheck,
+  faPaperPlane,
+  faThumbtack,
+  faClockRotateLeft,
 } from "@fortawesome/free-solid-svg-icons";
 import {
   faBell as faBellRegular,
@@ -167,6 +186,25 @@ library.add(
   // M-09 notification icons
   faCheckDouble,
   faXmark,
+  // M-10 route icons
+  faWandMagicSparkles,
+  faFlagCheckered,
+  faMap,
+  faRotateRight,
+  // M-11 CRM icons
+  faBuilding,
+  faAddressBook,
+  faMagnifyingGlass,
+  faGlobe,
+  faIndustry,
+  faArrowDownShortWide,
+  faUser,
+  faMapMarkerAlt,
+  faDollarSign,
+  faCalendarCheck,
+  faPaperPlane,
+  faThumbtack,
+  faClockRotateLeft,
   // Regular variants
   faBellRegular,
   faCalendarRegular,
