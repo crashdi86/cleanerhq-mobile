@@ -21,6 +21,7 @@ export default function AppLayout() {
   // Auto-process offline mutation queue in background
   useMutationQueueProcessor();
 
+
   if (!isSessionRestored || isLoading) {
     return (
       <View style={styles.loading}>

@@ -29,6 +29,7 @@ export const ENDPOINTS = {
   // Jobs — notes
   JOB_NOTES: (id: string) => `/jobs/${id}/notes` as const,
 
+
   // Jobs — schedule & unassigned
   MY_SCHEDULE: "/jobs/my-schedule",
   JOBS_UNASSIGNED: "/jobs/unassigned",
