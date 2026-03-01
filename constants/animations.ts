@@ -50,4 +50,10 @@ export const animationPresets = {
 
   scaleIn: () =>
     withTiming(1, { duration: 250, easing: Easing.out(Easing.ease) }),
+
+  confetti: () =>
+    withSequence(
+      withTiming(1, { duration: 150, easing: Easing.out(Easing.ease) }),
+      withTiming(0, { duration: 1350, easing: Easing.in(Easing.ease) })
+    ),
 } as const;

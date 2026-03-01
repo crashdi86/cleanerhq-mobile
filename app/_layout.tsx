@@ -15,6 +15,7 @@ import { useNetworkStore, setNetworkChangeCallback } from "@/store/network-store
 import { onNetworkChange } from "@/lib/offline/sync-manager";
 import { useSyncStore } from "@/store/sync-store";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { PushNotificationProvider } from "@/components/push/PushNotificationProvider";
 import { library } from "@fortawesome/fontawesome-svg-core";
 import {
   faHouse,
@@ -81,6 +82,29 @@ import {
   faCloudArrowDown,
   faRotate,
   faWifi,
+  faCloudBolt,
+  // M-09 notification icons
+  faCheckDouble,
+  faXmark,
+  // M-10 route icons
+  faWandMagicSparkles,
+  faFlagCheckered,
+  faMap,
+  faRotateRight,
+  // M-11 CRM icons
+  faBuilding,
+  faAddressBook,
+  faMagnifyingGlass,
+  faGlobe,
+  faIndustry,
+  faArrowDownShortWide,
+  faUser,
+  faMapMarkerAlt,
+  faDollarSign,
+  faCalendarCheck,
+  faPaperPlane,
+  faThumbtack,
+  faClockRotateLeft,
 } from "@fortawesome/free-solid-svg-icons";
 import {
   faBell as faBellRegular,
@@ -158,6 +182,29 @@ library.add(
   faCloudArrowDown,
   faRotate,
   faWifi,
+  faCloudBolt,
+  // M-09 notification icons
+  faCheckDouble,
+  faXmark,
+  // M-10 route icons
+  faWandMagicSparkles,
+  faFlagCheckered,
+  faMap,
+  faRotateRight,
+  // M-11 CRM icons
+  faBuilding,
+  faAddressBook,
+  faMagnifyingGlass,
+  faGlobe,
+  faIndustry,
+  faArrowDownShortWide,
+  faUser,
+  faMapMarkerAlt,
+  faDollarSign,
+  faCalendarCheck,
+  faPaperPlane,
+  faThumbtack,
+  faClockRotateLeft,
   // Regular variants
   faBellRegular,
   faCalendarRegular,
@@ -194,6 +241,7 @@ export default function RootLayout() {
       <QueryClientProvider client={queryClient}>
         <ErrorBoundary>
           <SessionProvider>
+            <PushNotificationProvider />
             <Slot />
           </SessionProvider>
           <ToastProvider />

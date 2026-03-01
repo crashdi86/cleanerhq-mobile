@@ -25,7 +25,16 @@ export function NoteCard({ note, variant = "default" }: NoteCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isTruncated, setIsTruncated] = useState(false);
 
-  const isPinned = variant === "pinned" || ("pinned" in note && note.pinned);
+  // Normalize field names between JobNote (body/author_name) and AccountNote (content/author_email)
+  const noteContent = "content" in note ? note.content : note.body;
+  const authorDisplay =
+    "author_email" in note ? note.author_email : note.author_name;
+  const authorAvatar =
+    "author_avatar_url" in note ? note.author_avatar_url : null;
+  const isPinned =
+    variant === "pinned" ||
+    ("is_pinned" in note && note.is_pinned) ||
+    ("pinned" in note && (note as { pinned?: boolean }).pinned === true);
   const isOptimistic = note.id.startsWith("temp-");
   const isCurrentUser = note.author_id === userId;
   const relativeTime = formatRelativeTime(note.created_at);
@@ -46,8 +55,8 @@ export function NoteCard({ note, variant = "default" }: NoteCardProps) {
 
   // Parse markdown-lite: **bold**, *italic*, bullet lists
   const renderedBody = useMemo(() => {
-    return parseMarkdownLite(note.body);
-  }, [note.body]);
+    return parseMarkdownLite(noteContent);
+  }, [noteContent]);
 
   const containerStyle = isPinned
     ? [componentStyles.card, componentStyles.pinnedCard]
@@ -60,14 +69,14 @@ export function NoteCard({ note, variant = "default" }: NoteCardProps) {
       {/* Author row */}
       <View className="flex-row items-center mb-2">
         <NoteAvatar
-          name={note.author_name}
-          avatarUrl={note.author_avatar_url}
+          name={authorDisplay}
+          avatarUrl={authorAvatar}
           size={32}
         />
         <View className="flex-1 ml-2">
           <View className="flex-row items-center">
             <Text className="text-sm font-semibold text-gray-900">
-              {note.author_name}
+              {authorDisplay}
             </Text>
             {isCurrentUser && (
               <View className="bg-[#B7F0AD] rounded-md px-1.5 py-0.5 ml-1.5">
@@ -101,7 +110,7 @@ export function NoteCard({ note, variant = "default" }: NoteCardProps) {
             numberOfLines={3}
             onTextLayout={handleTextLayout}
           >
-            {note.body}
+            {noteContent}
           </Text>
         )}
       </View>

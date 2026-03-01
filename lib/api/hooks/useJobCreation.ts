@@ -24,6 +24,17 @@ export function useAccountSearch(searchTerm: string) {
   );
 }
 
+/** Fetch all accounts for dropdown picker */
+export function useAllAccounts() {
+  return useApiQuery<AccountListItem[]>(
+    ["accounts", "all"],
+    () => apiClient.get<AccountListItem[]>(ENDPOINTS.ACCOUNTS),
+    {
+      staleTime: 5 * 60_000,
+    }
+  );
+}
+
 /** Fetch all workspace team members */
 export function useTeamMembers() {
   return useApiQuery<TeamMember[]>(

@@ -4,7 +4,9 @@ import { View, Text, Pressable } from "@/tw";
 import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
 import { faBell } from "@fortawesome/free-solid-svg-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
 import { useAuthStore } from "@/store/auth-store";
+import { useNotificationStore } from "@/store/notification-store";
 
 interface GreetingHeaderProps {
   variant: "staff" | "owner";
@@ -26,7 +28,9 @@ function getFirstName(fullName: string | undefined): string {
 
 export function GreetingHeader({ variant, children }: GreetingHeaderProps) {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const user = useAuthStore((s) => s.user);
+  const unreadCount = useNotificationStore((s) => s.unreadCount);
   const greeting = getGreeting();
   const firstName = getFirstName(user?.fullName);
 
@@ -78,13 +82,17 @@ export function GreetingHeader({ variant, children }: GreetingHeaderProps) {
           <Pressable
             className="w-12 h-12 rounded-2xl items-center justify-center"
             style={styles.bellButton}
+            onPress={() => router.push("/(app)/notifications" as never)}
           >
             <FontAwesomeIcon icon={faBell} size={18} color="#FFFFFF" />
-            {/* Red notification dot */}
-            <View
-              className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full"
-              style={styles.notificationDot}
-            />
+            {/* Unread badge — numeric when > 0, hidden otherwise */}
+            {unreadCount > 0 && (
+              <View style={styles.notificationBadge}>
+                <Text style={styles.notificationBadgeText}>
+                  {unreadCount > 99 ? "99+" : String(unreadCount)}
+                </Text>
+              </View>
+            )}
           </Pressable>
         </View>
       </View>
@@ -120,7 +128,21 @@ const styles = StyleSheet.create({
   bellButton: {
     backgroundColor: "rgba(255, 255, 255, 0.1)",
   },
-  notificationDot: {
+  notificationBadge: {
+    position: "absolute",
+    top: 0,
+    right: -2,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
     backgroundColor: "#EF4444",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 4,
+  },
+  notificationBadgeText: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: "#FFFFFF",
   },
 });

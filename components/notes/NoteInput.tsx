@@ -7,14 +7,16 @@ import {
 } from "react-native";
 import { View, Text, Pressable } from "@/tw";
 import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
-import { faPaperPlane } from "@fortawesome/free-solid-svg-icons";
+import { faPaperPlane, faThumbtack } from "@fortawesome/free-solid-svg-icons";
 import * as Haptics from "expo-haptics";
 
 interface NoteInputProps {
-  onSend: (body: string) => void;
+  onSend: (body: string, isPinned?: boolean) => void;
   maxLength?: number;
   isLoading?: boolean;
   placeholder?: string;
+  /** Show a thumbtack toggle for pinning notes (account notes only) */
+  showPinToggle?: boolean;
 }
 
 const DEFAULT_MAX_LENGTH = 5000;
@@ -25,15 +27,18 @@ const MAX_INPUT_HEIGHT = 100; // ~4 lines
 /**
  * Auto-growing multiline text input with send button and character counter.
  * Used for both job notes and account notes.
+ * Optionally shows a pin toggle for account notes.
  */
 export function NoteInput({
   onSend,
   maxLength = DEFAULT_MAX_LENGTH,
   isLoading = false,
   placeholder = "Add a note...",
+  showPinToggle = false,
 }: NoteInputProps) {
   const [body, setBody] = useState("");
   const [inputHeight, setInputHeight] = useState(MIN_INPUT_HEIGHT);
+  const [isPinned, setIsPinned] = useState(false);
   const inputRef = useRef<TextInput>(null);
 
   const trimmed = body.trim();
@@ -58,9 +63,15 @@ export function NoteInput({
     const noteBody = trimmed;
     setBody("");
     setInputHeight(MIN_INPUT_HEIGHT);
-    onSend(noteBody);
+    onSend(noteBody, showPinToggle ? isPinned : undefined);
+    setIsPinned(false);
     await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-  }, [isEmpty, isLoading, trimmed, onSend]);
+  }, [isEmpty, isLoading, trimmed, onSend, showPinToggle, isPinned]);
+
+  const handleTogglePin = useCallback(async () => {
+    setIsPinned((prev) => !prev);
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  }, []);
 
   return (
     <View style={componentStyles.container}>
@@ -81,6 +92,24 @@ export function NoteInput({
           maxLength={maxLength}
         />
 
+        {showPinToggle && (
+          <Pressable
+            onPress={() => void handleTogglePin()}
+            className="ml-1 mb-0.5"
+            style={[
+              componentStyles.pinButton,
+              isPinned && componentStyles.pinButtonActive,
+            ]}
+          >
+            <FontAwesomeIcon
+              icon={faThumbtack}
+              size={14}
+              color={isPinned ? "#10B981" : "#9CA3AF"}
+              style={{ transform: [{ rotate: "45deg" }] }}
+            />
+          </Pressable>
+        )}
+
         <Pressable
           onPress={() => void handleSend()}
           disabled={isDisabled}
@@ -98,14 +127,24 @@ export function NoteInput({
         </Pressable>
       </View>
 
-      {showCounter && (
-        <Text
-          className="text-[11px] mt-1 text-right"
-          style={{ color: isOverLimit ? "#EF4444" : "#9CA3AF" }}
-        >
-          {body.length}/{maxLength}
-        </Text>
-      )}
+      {/* Pin indicator + character counter */}
+      <View className="flex-row items-center justify-between mt-1">
+        {showPinToggle && isPinned ? (
+          <Text className="text-[11px] text-[#10B981] font-medium">
+            This note will be pinned
+          </Text>
+        ) : (
+          <View />
+        )}
+        {showCounter && (
+          <Text
+            className="text-[11px] text-right"
+            style={{ color: isOverLimit ? "#EF4444" : "#9CA3AF" }}
+          >
+            {body.length}/{maxLength}
+          </Text>
+        )}
+      </View>
     </View>
   );
 }
@@ -131,6 +170,16 @@ const componentStyles = StyleSheet.create({
     textAlignVertical: "top",
     paddingTop: 0,
     paddingBottom: 0,
+  },
+  pinButton: {
+    width: 32,
+    height: 36,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  pinButtonActive: {
+    backgroundColor: "rgba(16,185,129,0.1)",
   },
   sendButton: {
     width: 36,

@@ -20,6 +20,7 @@ import { useAuthStore } from "@/store/auth-store";
 import { apiClient } from "@/lib/api/client";
 import { ENDPOINTS } from "@/constants/api";
 import { useToastStore } from "@/store/toast-store";
+import { ConfettiEffect } from "@/components/ui/ConfettiEffect";
 
 const ONBOARDING_KEY = "@cleanerhq/onboarding_complete";
 const TOTAL_STEPS = 3;
@@ -35,6 +36,7 @@ export default function SetupWizardScreen() {
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [permissionLoading, setPermissionLoading] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   // Progress animation
   const progressAnim = useRef(new RNAnimated.Value(0)).current;
@@ -54,10 +56,14 @@ export default function SetupWizardScreen() {
 
   async function handleComplete() {
     await AsyncStorage.setItem(ONBOARDING_KEY, "true");
+    setShowConfetti(true);
 
-    if (user && workspace) {
-      useAuthStore.getState().setAuthenticated(user, workspace);
-    }
+    // Delay navigation to let confetti play (1.5s)
+    setTimeout(() => {
+      if (user && workspace) {
+        useAuthStore.getState().setAuthenticated(user, workspace);
+      }
+    }, 1500);
   }
 
   function handleSkipAll() {
@@ -226,6 +232,9 @@ export default function SetupWizardScreen() {
           )}
         </View>
       </View>
+
+      {/* Confetti burst overlay on wizard completion */}
+      {showConfetti && <ConfettiEffect />}
     </View>
   );
 }

@@ -52,6 +52,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     "expo-router",
     "expo-font",
     "expo-secure-store",
+    [
+      "expo-notifications",
+      {
+        color: "#2A5B4F",
+      },
+    ],
     "expo-image",
     "expo-web-browser",
     "expo-local-authentication",

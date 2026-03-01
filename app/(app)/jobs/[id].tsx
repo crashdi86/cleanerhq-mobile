@@ -4,6 +4,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { View, ScrollView } from "@/tw";
 import { useJobDetail } from "@/lib/api/hooks/useJobDetail";
 import { useChecklist } from "@/lib/api/hooks/useChecklist";
+import { useJobNotifications } from "@/lib/api/hooks/useNotifications";
 import { JobDetailHeader } from "@/components/job-detail/JobDetailHeader";
 import { ArrivalCard } from "@/components/job-detail/ArrivalCard";
 import { ProfitGuardBadge } from "@/components/job-detail/ProfitGuardBadge";
@@ -15,6 +16,12 @@ import { NotesTab } from "@/components/job-detail/NotesTab";
 import { SpecialInstructionsCard } from "@/components/job-detail/SpecialInstructionsCard";
 import { BottomActionBar } from "@/components/job-detail/BottomActionBar";
 import { IncompleteItemsSheet } from "@/components/checklist/IncompleteItemsSheet";
+import { RunningLateSheet } from "@/components/notifications/RunningLateSheet";
+import { NotificationHistorySheet } from "@/components/notifications/NotificationHistorySheet";
+import { SOSFloatingButton } from "@/components/sos/SOSFloatingButton";
+import { SOSDisclaimerModal } from "@/components/sos/SOSDisclaimerModal";
+import { SOSCountdownModal } from "@/components/sos/SOSCountdownModal";
+import { useSOSTrigger } from "@/hooks/useSOSTrigger";
 import { JobDetailSkeleton } from "@/components/job-detail/JobDetailSkeleton";
 import { JobDetailError } from "@/components/job-detail/JobDetailError";
 import type { ChecklistItem } from "@/lib/api/types";
@@ -28,9 +35,19 @@ export default function JobDetailScreen() {
   const [activeTab, setActiveTab] = useState<TabKey>("details");
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showIncompleteSheet, setShowIncompleteSheet] = useState(false);
+  const [showRunningLate, setShowRunningLate] = useState(false);
+  const [showNotificationHistory, setShowNotificationHistory] = useState(false);
 
   // Fetch checklist for gating sheet
   const { data: checklistData } = useChecklist(id ?? "");
+
+  // Fetch notification can_send state for Running Late remaining count
+  const { data: notificationsData } = useJobNotifications(id ?? "");
+  const runningLateRemaining =
+    notificationsData?.can_send?.running_late_remaining_today ?? 3;
+
+  // SOS trigger orchestration
+  const sos = useSOSTrigger(id ?? "");
 
   // Compute incomplete required items for the gating sheet
   const incompleteRequiredItems = useMemo(() => {
@@ -142,10 +159,17 @@ export default function JobDetailScreen() {
         <View className="pb-32" />
       </ScrollView>
 
+      {/* SOS floating button — only during in_progress */}
+      {job.status === "in_progress" && (
+        <SOSFloatingButton onPress={sos.triggerSOS} />
+      )}
+
       {/* Fixed bottom action bar */}
       <BottomActionBar
         job={job}
         onChecklistGatePress={handleChecklistGatePress}
+        onRunningLatePress={() => setShowRunningLate(true)}
+        onNotificationHistoryPress={() => setShowNotificationHistory(true)}
       />
 
       {/* Incomplete items sheet (completion gating) */}
@@ -155,6 +179,34 @@ export default function JobDetailScreen() {
         onClose={() => setShowIncompleteSheet(false)}
         onItemPress={handleIncompleteItemPress}
         onGoToChecklist={handleGoToChecklist}
+      />
+
+      {/* Running Late bottom sheet */}
+      <RunningLateSheet
+        visible={showRunningLate}
+        jobId={job.id}
+        remainingToday={runningLateRemaining}
+        onClose={() => setShowRunningLate(false)}
+      />
+
+      {/* Notification history */}
+      <NotificationHistorySheet
+        visible={showNotificationHistory}
+        jobId={job.id}
+        onClose={() => setShowNotificationHistory(false)}
+      />
+
+      {/* SOS disclaimer modal */}
+      <SOSDisclaimerModal
+        visible={sos.showDisclaimer}
+        onAccept={() => void sos.dismissDisclaimer()}
+      />
+
+      {/* SOS countdown modal */}
+      <SOSCountdownModal
+        visible={sos.showCountdown}
+        onCancel={sos.cancelCountdown}
+        onComplete={() => void sos.handleCountdownComplete()}
       />
     </View>
   );

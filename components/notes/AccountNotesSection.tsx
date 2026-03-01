@@ -64,8 +64,8 @@ export function AccountNotesSection({
     const flat: AccountNote[] = data.pages.flatMap((page) => page.notes);
 
     // Separate pinned and regular, then combine
-    const pinned = flat.filter((n) => n.pinned);
-    const regular = flat.filter((n) => !n.pinned);
+    const pinned = flat.filter((n) => n.is_pinned);
+    const regular = flat.filter((n) => !n.is_pinned);
 
     // Sort each group by created_at descending
     const byDateDesc = (a: AccountNote, b: AccountNote) =>
@@ -75,9 +75,9 @@ export function AccountNotesSection({
   }, [data]);
 
   const handleSendNote = useCallback(
-    (body: string) => {
+    (body: string, isPinned?: boolean) => {
       addNoteMutation.mutate(
-        { body },
+        { content: body, is_pinned: isPinned },
         {
           onError: () => {
             showToast("error", "Failed to add note");
@@ -117,7 +117,7 @@ export function AccountNotesSection({
               <NoteCard
                 key={note.id}
                 note={note}
-                variant={note.pinned ? "pinned" : "default"}
+                variant={note.is_pinned ? "pinned" : "default"}
               />
             ))}
 
@@ -146,6 +146,7 @@ export function AccountNotesSection({
             onSend={handleSendNote}
             isLoading={addNoteMutation.isPending}
             placeholder="Add an account note..."
+            showPinToggle
           />
         </View>
       </View>

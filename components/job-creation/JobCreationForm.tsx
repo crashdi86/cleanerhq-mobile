@@ -62,6 +62,7 @@ export function JobCreationForm({ onSuccess }: JobCreationFormProps) {
     control,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<CreateJobFormInput, unknown, CreateJobFormData>({
     resolver: zodResolver(createJobSchema),
@@ -79,6 +80,10 @@ export function JobCreationForm({ onSuccess }: JobCreationFormProps) {
     },
   });
 
+  // Watch start/end dates for cross-validation constraints
+  const watchedStart = watch("scheduled_start");
+  const watchedEnd = watch("scheduled_end");
+
   const handleAccountSelect = useCallback(
     (accountId: string, account: AccountListItem) => {
       setValue("account_id", accountId);
@@ -93,7 +98,7 @@ export function JobCreationForm({ onSuccess }: JobCreationFormProps) {
   const onSubmit = useCallback(
     async (data: CreateJobFormData) => {
       try {
-        const job = await createJobMutation.mutateAsync({
+        const payload = {
           title: data.title,
           service_address: data.service_address,
           account_id: data.account_id,
@@ -104,22 +109,60 @@ export function JobCreationForm({ onSuccess }: JobCreationFormProps) {
           assigned_to: data.assigned_to.length > 0 ? data.assigned_to : undefined,
           special_instructions: data.special_instructions || undefined,
           notes: data.notes || undefined,
-        });
+        };
+        if (__DEV__) {
+          console.log("[JobCreation] Payload:", JSON.stringify(payload, null, 2));
+        }
+        const job = await createJobMutation.mutateAsync(payload);
         onSuccess(job);
       } catch (err) {
+        if (__DEV__) {
+          console.error("[JobCreation] Error creating job:", err);
+        }
         if (err instanceof ApiError) {
           switch (err.code) {
             case "RATE_LIMITED":
               showToast("error", "Too many requests. Please wait and try again.");
               break;
+            case "PERMISSION_DENIED":
             case "INVALID_CREDENTIALS":
               showToast("error", "You don't have permission to create jobs.");
+              break;
+            case "VALIDATION_ERROR": {
+              const fieldErrors = err.details
+                ?.map((d) => `${d.path}: ${d.message}`)
+                .join("\n");
+              showToast(
+                "error",
+                fieldErrors || err.message || "Validation failed."
+              );
+              break;
+            }
+            case "NOT_FOUND":
+              showToast(
+                "error",
+                err.message || "A referenced record was not found."
+              );
               break;
             default:
               showToast("error", err.message || "Failed to create job.");
           }
+          if (__DEV__) {
+            console.error(
+              `[JobCreation] ApiError code=${err.code} status=${err.status} message=${err.message}`,
+              err.details
+            );
+          }
+        } else if (err instanceof TypeError) {
+          // Network / CORS / fetch failures throw TypeError
+          showToast(
+            "error",
+            "Network error — check your connection and try again."
+          );
         } else {
-          showToast("error", "Something went wrong. Please try again.");
+          const message =
+            err instanceof Error ? err.message : "Unknown error occurred.";
+          showToast("error", message);
         }
       }
     },
@@ -212,6 +255,7 @@ export function JobCreationForm({ onSuccess }: JobCreationFormProps) {
                 value={value}
                 onChange={onChange}
                 error={errors.scheduled_start?.message}
+                maxDate={watchedEnd}
               />
             )}
           />
@@ -226,6 +270,7 @@ export function JobCreationForm({ onSuccess }: JobCreationFormProps) {
                 value={value}
                 onChange={onChange}
                 error={errors.scheduled_end?.message}
+                minDate={watchedStart}
               />
             )}
           />

@@ -9,6 +9,7 @@ import type {
   JobNote,
   AccountNote,
   AddNoteRequest,
+  AddAccountNoteRequest,
   AccountDetail,
 } from "@/lib/api/types";
 
@@ -125,7 +126,7 @@ export function useAccountNotes(accountId: string) {
 export function useAddAccountNote(accountId: string) {
   const user = useAuthStore((s) => s.user);
 
-  return useApiMutation<AccountNote, AddNoteRequest>(
+  return useApiMutation<AccountNote, AddAccountNoteRequest>(
     (body) =>
       apiClient.post<AccountNote>(ENDPOINTS.ACCOUNT_NOTES(accountId), body),
     {
@@ -142,13 +143,11 @@ export function useAddAccountNote(accountId: string) {
         // Optimistically add to first page
         const tempNote: AccountNote = {
           id: `temp-${Date.now()}`,
-          body: newNote.body,
-          pinned: false,
+          content: newNote.content,
+          is_pinned: newNote.is_pinned ?? false,
           author_id: user?.id ?? "",
-          author_name: user?.fullName ?? "You",
-          author_avatar_url: user?.avatarUrl ?? null,
+          author_email: user?.email ?? "",
           created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
         };
 
         queryClient.setQueryData<{
@@ -169,7 +168,11 @@ export function useAddAccountNote(accountId: string) {
 
         return { previous };
       },
-      onError: (_err: ApiError, _vars: AddNoteRequest, context: unknown) => {
+      onError: (
+        _err: ApiError,
+        _vars: AddAccountNoteRequest,
+        context: unknown,
+      ) => {
         const ctx = context as { previous?: unknown } | undefined;
         if (ctx?.previous) {
           queryClient.setQueryData(
