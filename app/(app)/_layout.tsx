@@ -98,6 +98,16 @@ export default function AppLayout() {
             animation: "slide_from_bottom",
           }}
         />
+        <Stack.Screen name="calculator/index" />
+        <Stack.Screen name="calculator/form" />
+        <Stack.Screen name="calculator/results" />
+        <Stack.Screen
+          name="calculator/flip"
+          options={{
+            presentation: "fullScreenModal",
+            animation: "slide_from_bottom",
+          }}
+        />
       </Stack>
       <ClockStatusIndicator />
       <OfflineStatusBar />

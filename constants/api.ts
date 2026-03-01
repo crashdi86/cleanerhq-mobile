@@ -79,6 +79,10 @@ export const ENDPOINTS = {
   CHAT_SEND: (id: string) => `/chat/conversations/${id}/send` as const,
   CHAT_READ: (id: string) => `/chat/conversations/${id}/read` as const,
 
+  // Calculator (M-13)
+  CALCULATOR_CALCULATE: "/calculator/calculate",
+  CALCULATOR_CREATE_QUOTE: "/calculator/create-quote",
+
   // Sync
   DELTA_SYNC: "/sync/delta",
 

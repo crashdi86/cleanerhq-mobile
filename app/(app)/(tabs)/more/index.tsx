@@ -221,6 +221,48 @@ export default function MoreScreen() {
         </Pressable>
       </View>
 
+      {/* Divider between CRM and Tools */}
+      <View className="h-px bg-border mx-6" />
+
+      {/* Tools Section */}
+      <View className="px-6 pt-6">
+        <Text className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-3">
+          Tools
+        </Text>
+
+        {/* Calculator */}
+        <Pressable
+          onPress={() => router.push("/(app)/calculator" as never)}
+          className="flex-row items-center justify-between py-4"
+        >
+          <View className="flex-row items-center gap-3">
+            <View
+              className="items-center justify-center rounded-xl"
+              style={styles.settingIcon}
+            >
+              <FontAwesomeIcon
+                icon="calculator"
+                size={18}
+                color="#2A5B4F"
+              />
+            </View>
+            <View>
+              <Text className="text-base font-medium text-text-primary">
+                Calculator
+              </Text>
+              <Text className="text-xs text-text-secondary mt-0.5">
+                Estimate pricing for any service
+              </Text>
+            </View>
+          </View>
+          <FontAwesomeIcon
+            icon="chevron-right"
+            size={14}
+            color="#9CA3AF"
+          />
+        </Pressable>
+      </View>
+
       {/* Divider between CRM and Settings */}
       <View className="h-px bg-border mx-6" />
 

@@ -107,6 +107,16 @@ import {
   faClockRotateLeft,
   // M-12 chat icons
   faComments,
+  // M-13 calculator icons
+  faCalculator,
+  faSliders,
+  faMinus,
+  faTrashCan,
+  faRotateLeft,
+  faSignature,
+  faStar,
+  faCrown,
+  faHandshake,
 } from "@fortawesome/free-solid-svg-icons";
 import {
   faBell as faBellRegular,
@@ -209,6 +219,16 @@ library.add(
   faClockRotateLeft,
   // M-12 chat icons
   faComments,
+  // M-13 calculator icons
+  faCalculator,
+  faSliders,
+  faMinus,
+  faTrashCan,
+  faRotateLeft,
+  faSignature,
+  faStar,
+  faCrown,
+  faHandshake,
   // Regular variants
   faBellRegular,
   faCalendarRegular,

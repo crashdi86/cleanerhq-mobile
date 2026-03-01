@@ -816,3 +816,89 @@ export interface SendMessageResponse {
 export interface MarkReadRequest {
   last_read_sequence: number;
 }
+
+// ── Calculator / Quotes (M-13) ──
+
+export type CalculatorType =
+  | "move_in_out"
+  | "office_janitorial"
+  | "solar_panel"
+  | "gutter_cleaning"
+  | "commercial_janitorial_recurring"
+  | "house_cleaning_standard_recurring"
+  | "airbnb_str_turnover"
+  | "hoarding_clutter_remediation"
+  | "medical_office_cleaning"
+  | "floor_stripping_waxing"
+  | "window_cleaning"
+  | "pressure_washing"
+  | "carpet_upholstery"
+  | "event_cleanup"
+  | "construction"
+  | "time_and_materials";
+
+export type PricingModel = "MARGIN" | "MARKUP";
+export type TierLevel = "good" | "better" | "best";
+export type ServiceFrequency = "weekly" | "biweekly" | "monthly" | "one_time";
+
+export interface CalculatorProject {
+  name: string;
+  address: {
+    street: string;
+    city: string;
+    state: string;
+    zip: string;
+  };
+}
+
+export interface CalculatorPricing {
+  marginModel: PricingModel;
+  marginPercent: number;
+  minimumCharge: number;
+}
+
+export interface CalculateRequest {
+  calculatorType: CalculatorType;
+  workspaceId: string;
+  accountId?: string;
+  project: CalculatorProject;
+  pricing: CalculatorPricing;
+  /** Domain-specific fields vary per calculator type */
+  [key: string]: unknown;
+}
+
+export interface TierFeature {
+  label: string;
+  included: boolean;
+}
+
+export interface TierResult {
+  tier: TierLevel;
+  label: string;
+  total: number;
+  perVisit?: number;
+  margin_percent: number;
+  features: TierFeature[];
+  recommended?: boolean;
+}
+
+export interface CalculateResponse {
+  tiers: TierResult[];
+  calculator_type: CalculatorType;
+  breakdown: Record<string, unknown>;
+}
+
+export interface CreateQuoteFromCalcRequest {
+  account_id: string;
+  opportunity_id?: string;
+  calculator_input: Record<string, unknown>;
+  calculator_output: Record<string, unknown>;
+  project_name: string;
+  selected_tier: TierLevel;
+  selected_total: number;
+}
+
+export interface CreateQuoteFromCalcResponse {
+  id: string;
+  quote_number: string;
+}

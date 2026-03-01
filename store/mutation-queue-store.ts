@@ -19,7 +19,8 @@ export type MutationEntityType =
   | "checklist_item"
   | "note"
   | "job_status"
-  | "chat_message";
+  | "chat_message"
+  | "calculator_quote";
 
 export type MutationMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
