@@ -71,6 +71,17 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
           "CleanerHQ needs your location for clock-in verification.",
       },
     ],
+    [
+      "expo-build-properties",
+      {
+        android: {
+          kotlinVersion: "1.9.24",
+        },
+        ios: {
+          deploymentTarget: "15.1",
+        },
+      },
+    ],
   ],
   experiments: {
     typedRoutes: true,

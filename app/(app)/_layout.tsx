@@ -3,7 +3,9 @@ import { ActivityIndicator, View, StyleSheet } from "react-native";
 import { useAuthStore } from "@/store/auth-store";
 import { useClockStatusSync } from "@/hooks/useClockStatusSync";
 import { useUploadProcessor } from "@/hooks/useUploadProcessor";
+import { useMutationQueueProcessor } from "@/hooks/useMutationQueueProcessor";
 import { ClockStatusIndicator } from "@/components/navigation/ClockStatusIndicator";
+import { OfflineStatusBar } from "@/components/offline/OfflineStatusBar";
 
 export default function AppLayout() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
@@ -15,6 +17,10 @@ export default function AppLayout() {
 
   // Auto-process photo upload queue in background
   useUploadProcessor();
+
+  // Auto-process offline mutation queue in background
+  useMutationQueueProcessor();
+
 
   if (!isSessionRestored || isLoading) {
     return (
@@ -56,6 +62,7 @@ export default function AppLayout() {
           }}
         />
         <Stack.Screen name="time-history" />
+        <Stack.Screen name="accounts/[id]" />
         <Stack.Screen
           name="annotate"
           options={{
@@ -79,6 +86,7 @@ export default function AppLayout() {
         />
       </Stack>
       <ClockStatusIndicator />
+      <OfflineStatusBar />
     </View>
   );
 }

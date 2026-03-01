@@ -1,5 +1,5 @@
 import React, { useCallback } from "react";
-import { Platform } from "react-native";
+import { Platform, StyleSheet } from "react-native";
 import { View, Text, Pressable } from "@/tw";
 import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
 import {
@@ -7,6 +7,9 @@ import {
   faTriangleExclamation,
   faUsers,
   faCopy,
+  faLock,
+  faPaw,
+  faParking,
 } from "@fortawesome/free-solid-svg-icons";
 import * as Clipboard from "expo-clipboard";
 import { showToast } from "@/store/toast-store";
@@ -18,43 +21,69 @@ interface SpecialInstructionsCardProps {
 }
 
 /**
- * Phase 5: Special Instructions Card
+ * M-03 + M-06 S3: Special Instructions & Property Access Card.
  *
  * Visibility gate: only when job is in_progress AND current user is assigned.
- * Sections: gate code (tap-to-copy), special instructions, internal notes.
- * Empty sections return null.
+ * When NOT in_progress, shows locked placeholder if access info exists.
+ * Sections: gate code, lockbox code, alarm code (tap-to-copy),
+ *           parking instructions, pet warning, special instructions, internal notes.
  */
 export function SpecialInstructionsCard({ job }: SpecialInstructionsCardProps) {
   const userId = useAuthStore((s) => s.user?.id);
 
-  // Visibility gate: only show when in_progress and user is assigned
-  if (job.status !== "in_progress") return null;
-  if (!userId || !job.assigned_to.includes(userId)) return null;
-
   const hasGateCode = Boolean(job.gate_code);
+  const hasLockboxCode = Boolean(job.lockbox_code);
+  const hasAlarmCode = Boolean(job.alarm_code);
+  const hasParkingInstructions = Boolean(job.parking_instructions);
+  const hasPetWarning = Boolean(job.pet_warning);
   const hasSpecialInstructions = Boolean(job.special_instructions);
   const hasPropertyAccess = Boolean(job.property_access_notes);
   const hasInternalNotes = Boolean(job.internal_notes);
 
-  // If nothing to show, render nothing
-  if (
-    !hasGateCode &&
-    !hasSpecialInstructions &&
-    !hasPropertyAccess &&
-    !hasInternalNotes
-  ) {
+  const hasAnyAccessInfo =
+    hasGateCode ||
+    hasLockboxCode ||
+    hasAlarmCode ||
+    hasParkingInstructions ||
+    hasPetWarning ||
+    hasPropertyAccess;
+
+  const hasAnything =
+    hasAnyAccessInfo || hasSpecialInstructions || hasInternalNotes;
+
+  // If nothing to show at all, render nothing
+  if (!hasAnything) {
     return null;
   }
 
+  // Locked state: job NOT in_progress but access info exists
+  if (job.status !== "in_progress") {
+    if (hasAnyAccessInfo) {
+      return <LockedAccessPlaceholder />;
+    }
+    // Only special instructions / internal notes without access info
+    // Still gate behind in_progress
+    return null;
+  }
+
+  // Fully gated: must be assigned
+  if (!userId || !job.assigned_to.includes(userId)) return null;
+
   return (
     <View className="mx-4 mt-4 gap-3">
-      {/* Property Access / Gate Code */}
-      {(hasGateCode || hasPropertyAccess) && (
+      {/* Property Access / Gate Code / Lockbox / Alarm */}
+      {hasAnyAccessInfo && (
         <PropertyAccessSection
           gateCode={job.gate_code}
+          lockboxCode={job.lockbox_code}
+          alarmCode={job.alarm_code}
+          parkingInstructions={job.parking_instructions}
           propertyAccessNotes={job.property_access_notes}
         />
       )}
+
+      {/* Pet Warning */}
+      {hasPetWarning && <PetWarningBanner warning={job.pet_warning!} />}
 
       {/* Special Instructions */}
       {hasSpecialInstructions && (
@@ -67,21 +96,38 @@ export function SpecialInstructionsCard({ job }: SpecialInstructionsCardProps) {
   );
 }
 
+// ── Locked Placeholder ──
+
+function LockedAccessPlaceholder() {
+  return (
+    <View className="mx-4 mt-4">
+      <View className="bg-gray-50 rounded-2xl p-4 items-center">
+        <View className="w-10 h-10 rounded-full bg-gray-200 items-center justify-center mb-2">
+          <FontAwesomeIcon icon={faLock} size={16} color="#9CA3AF" />
+        </View>
+        <Text className="text-sm text-gray-500 font-medium">
+          Start the job to view access info
+        </Text>
+      </View>
+    </View>
+  );
+}
+
 // ── Property Access Section ──
 
 function PropertyAccessSection({
   gateCode,
+  lockboxCode,
+  alarmCode,
+  parkingInstructions,
   propertyAccessNotes,
 }: {
   gateCode: string | null;
+  lockboxCode: string | null;
+  alarmCode: string | null;
+  parkingInstructions: string | null;
   propertyAccessNotes: string | null;
 }) {
-  const handleCopyGateCode = useCallback(async () => {
-    if (!gateCode) return;
-    await Clipboard.setStringAsync(gateCode);
-    showToast("success", "Gate code copied");
-  }, [gateCode]);
-
   return (
     <View className="bg-white rounded-2xl p-4">
       <View className="flex-row items-center mb-3">
@@ -94,37 +140,79 @@ function PropertyAccessSection({
       </View>
 
       {gateCode ? (
-        <Pressable
-          onPress={handleCopyGateCode}
-          className="flex-row items-center justify-between bg-gray-50 rounded-xl px-4 py-3 mb-2"
-        >
-          <View>
-            <Text className="text-xs text-gray-500 mb-1">Gate Code</Text>
-            <Text
-              className="text-xl font-bold text-gray-900"
-              style={{
-                fontFamily: Platform.select({
-                  ios: "JetBrainsMono-Bold",
-                  android: "JetBrainsMono-Bold",
-                  default: "monospace",
-                }),
-                letterSpacing: 2,
-              }}
-            >
-              {gateCode}
-            </Text>
+        <CodeRow label="Gate Code" value={gateCode} />
+      ) : null}
+
+      {lockboxCode ? (
+        <CodeRow label="Lockbox Code" value={lockboxCode} />
+      ) : null}
+
+      {alarmCode ? (
+        <CodeRow label="Alarm Code" value={alarmCode} />
+      ) : null}
+
+      {parkingInstructions ? (
+        <View className="mt-2">
+          <View className="flex-row items-center mb-1">
+            <FontAwesomeIcon icon={faParking} size={12} color="#6B7280" />
+            <Text className="text-xs text-gray-500 ml-1.5">Parking</Text>
           </View>
-          <View className="w-8 h-8 rounded-full bg-gray-200 items-center justify-center">
-            <FontAwesomeIcon icon={faCopy} size={14} color="#6B7280" />
-          </View>
-        </Pressable>
+          <Text className="text-sm text-gray-700 leading-5">
+            {parkingInstructions}
+          </Text>
+        </View>
       ) : null}
 
       {propertyAccessNotes ? (
-        <Text className="text-sm text-gray-700 leading-5">
+        <Text className="text-sm text-gray-700 leading-5 mt-2">
           {propertyAccessNotes}
         </Text>
       ) : null}
+    </View>
+  );
+}
+
+// ── Code Row (tap-to-copy, monospace) ──
+
+function CodeRow({ label, value }: { label: string; value: string }) {
+  const handleCopy = useCallback(async () => {
+    await Clipboard.setStringAsync(value);
+    showToast("success", `${label} copied`);
+  }, [value, label]);
+
+  return (
+    <Pressable
+      onPress={() => void handleCopy()}
+      className="flex-row items-center justify-between bg-gray-50 rounded-xl px-4 py-3 mb-2"
+    >
+      <View>
+        <Text className="text-xs text-gray-500 mb-1">{label}</Text>
+        <Text
+          className="text-xl font-bold text-gray-900"
+          style={codeStyles.codeText}
+        >
+          {value}
+        </Text>
+      </View>
+      <View className="w-8 h-8 rounded-full bg-gray-200 items-center justify-center">
+        <FontAwesomeIcon icon={faCopy} size={14} color="#6B7280" />
+      </View>
+    </Pressable>
+  );
+}
+
+// ── Pet Warning Banner ──
+
+function PetWarningBanner({ warning }: { warning: string }) {
+  return (
+    <View style={componentStyles.petWarning} className="rounded-2xl p-4">
+      <View className="flex-row items-center mb-1">
+        <FontAwesomeIcon icon={faPaw} size={14} color="#F59E0B" />
+        <Text className="text-sm font-bold text-amber-800 ml-2">
+          Pet Warning
+        </Text>
+      </View>
+      <Text className="text-sm text-amber-900 leading-5">{warning}</Text>
     </View>
   );
 }
@@ -167,3 +255,22 @@ function InternalNotesSection({ text }: { text: string }) {
     </View>
   );
 }
+
+const codeStyles = StyleSheet.create({
+  codeText: {
+    fontFamily: Platform.select({
+      ios: "JetBrainsMono-Bold",
+      android: "JetBrainsMono-Bold",
+      default: "monospace",
+    }),
+    letterSpacing: 2,
+  },
+});
+
+const componentStyles = StyleSheet.create({
+  petWarning: {
+    backgroundColor: "#FFF7ED",
+    borderWidth: 1,
+    borderColor: "#FED7AA",
+  },
+});

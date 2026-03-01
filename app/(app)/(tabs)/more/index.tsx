@@ -11,6 +11,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuthStore } from "@/store/auth-store";
 import { useLogout } from "@/hooks/useLogout";
 import { useBiometric } from "@/hooks/useBiometric";
+import { PendingSyncCounter } from "@/components/offline/PendingSyncCounter";
+import { useSyncStore } from "@/store/sync-store";
+import { formatCacheTime } from "@/lib/offline/format-cache-time";
 
 export default function MoreScreen() {
   const insets = useSafeAreaInsets();
@@ -18,6 +21,7 @@ export default function MoreScreen() {
   const workspace = useAuthStore((s) => s.workspace);
   const logout = useLogout();
   const biometric = useBiometric();
+  const lastSyncedAt = useSyncStore((s) => s.lastSyncedAt);
 
   const handleBiometricToggle = useCallback(async (value: boolean) => {
     if (value) {
@@ -166,6 +170,38 @@ export default function MoreScreen() {
           </View>
           <Text className="text-sm text-text-secondary">1.0.0</Text>
         </View>
+
+        <View className="h-px bg-border" />
+
+        {/* Pending Sync Counter (only shows when items pending) */}
+        <PendingSyncCounter />
+
+        {/* Last Synced */}
+        {lastSyncedAt && (
+          <>
+            <View className="h-px bg-border" />
+            <View className="flex-row items-center justify-between py-4">
+              <View className="flex-row items-center gap-3">
+                <View
+                  className="items-center justify-center rounded-xl"
+                  style={styles.settingIcon}
+                >
+                  <FontAwesomeIcon
+                    icon="cloud-arrow-up"
+                    size={18}
+                    color="#2A5B4F"
+                  />
+                </View>
+                <Text className="text-base font-medium text-text-primary">
+                  Last Synced
+                </Text>
+              </View>
+              <Text className="text-sm text-text-secondary">
+                {formatCacheTime(lastSyncedAt)}
+              </Text>
+            </View>
+          </>
+        )}
       </View>
 
       {/* Logout Button */}

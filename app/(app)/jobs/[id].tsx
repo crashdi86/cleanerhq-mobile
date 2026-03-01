@@ -96,12 +96,7 @@ export default function JobDetailScreen() {
       case "photos":
         return <PhotosTab photos={job.photos} jobId={job.id} />;
       case "notes":
-        return (
-          <NotesTab
-            internalNotes={job.internal_notes}
-            description={job.description}
-          />
-        );
+        return <NotesTab jobId={job.id} />;
     }
   }
 

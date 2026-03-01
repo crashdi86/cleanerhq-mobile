@@ -1,17 +1,20 @@
-import { useApiQuery, useApiMutation } from "@/lib/api/hooks";
+import { useCachedQuery } from "@/hooks/useCachedQuery";
+import { useApiMutation } from "@/lib/api/hooks";
 import { apiClient, ApiError } from "@/lib/api/client";
 import { queryClient } from "@/lib/api/query-client";
 import { ENDPOINTS } from "@/constants/api";
 import type { JobChecklist, ChecklistItem } from "@/lib/api/types";
 
-/** Fetch checklist for a job */
+/** Fetch checklist for a job (with offline cache) */
 export function useChecklist(jobId: string) {
-  return useApiQuery<JobChecklist>(
+  return useCachedQuery<JobChecklist>(
     ["checklist", jobId],
     () => apiClient.get<JobChecklist>(ENDPOINTS.JOB_CHECKLIST(jobId)),
     {
       staleTime: 30_000,
       enabled: !!jobId,
+      entityType: "checklist",
+      cacheKey: `checklist:${jobId}`,
     }
   );
 }

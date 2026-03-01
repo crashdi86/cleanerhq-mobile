@@ -1,4 +1,5 @@
-import { useApiQuery, useApiMutation } from "@/lib/api/hooks";
+import { useCachedQuery } from "@/hooks/useCachedQuery";
+import { useApiMutation } from "@/lib/api/hooks";
 import { apiClient } from "@/lib/api/client";
 import { queryClient } from "@/lib/api/query-client";
 import { ENDPOINTS } from "@/constants/api";
@@ -9,14 +10,16 @@ import type {
   JobStatusUpdateRequest,
 } from "@/lib/api/types";
 
-/** Fetch full job detail by ID */
+/** Fetch full job detail by ID (with offline cache) */
 export function useJobDetail(id: string) {
-  return useApiQuery<JobDetail>(
+  return useCachedQuery<JobDetail>(
     ["job", id],
     () => apiClient.get<JobDetail>(ENDPOINTS.JOB_DETAIL(id)),
     {
       staleTime: 60_000,
       enabled: !!id,
+      entityType: "job",
+      cacheKey: `job:${id}`,
     }
   );
 }

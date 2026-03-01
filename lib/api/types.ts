@@ -298,6 +298,11 @@ export interface JobDetail {
   property_access_notes: string | null;
   internal_notes: string | null;
   gate_code: string | null;
+  lockbox_code: string | null;
+  alarm_code: string | null;
+  parking_instructions: string | null;
+  pet_warning: string | null;
+  notes: JobNote[];
   checklist: JobChecklist;
   photos: JobPhoto[];
   completion_requirements: CompletionRequirements;
@@ -362,6 +367,49 @@ export interface TeamMember {
   avatar_url: string | null;
   phone: string | null;
   role_title: string | null;
+}
+
+// ── Note Types (M-06) ──
+
+export interface JobNote {
+  id: string;
+  body: string;
+  author_id: string;
+  author_name: string;
+  author_avatar_url: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AccountNote {
+  id: string;
+  body: string;
+  pinned: boolean;
+  author_id: string;
+  author_name: string;
+  author_avatar_url: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AddNoteRequest {
+  body: string;
+}
+
+export interface AccountDetail {
+  id: string;
+  name: string;
+  address: string;
+  street: string;
+  city: string;
+  state: string;
+  zip: string;
+  phone: string | null;
+  email: string | null;
+  contact_name: string | null;
+  notes_count: number;
+  jobs_count: number;
+  created_at: string;
 }
 
 // ── Profile Types ──
