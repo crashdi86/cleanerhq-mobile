@@ -18,7 +18,8 @@ export type MutationEntityType =
   | "time_entry"
   | "checklist_item"
   | "note"
-  | "job_status";
+  | "job_status"
+  | "chat_message";
 
 export type MutationMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 

@@ -105,6 +105,8 @@ import {
   faPaperPlane,
   faThumbtack,
   faClockRotateLeft,
+  // M-12 chat icons
+  faComments,
 } from "@fortawesome/free-solid-svg-icons";
 import {
   faBell as faBellRegular,
@@ -205,6 +207,8 @@ library.add(
   faPaperPlane,
   faThumbtack,
   faClockRotateLeft,
+  // M-12 chat icons
+  faComments,
   // Regular variants
   faBellRegular,
   faCalendarRegular,

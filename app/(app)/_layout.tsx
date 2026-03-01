@@ -5,6 +5,7 @@ import { useClockStatusSync } from "@/hooks/useClockStatusSync";
 import { useUploadProcessor } from "@/hooks/useUploadProcessor";
 import { useMutationQueueProcessor } from "@/hooks/useMutationQueueProcessor";
 import { useUnreadBadge } from "@/hooks/useUnreadBadge";
+import { useChatUnreadBadge } from "@/hooks/useChatUnreadBadge";
 import { ClockStatusIndicator } from "@/components/navigation/ClockStatusIndicator";
 import { OfflineStatusBar } from "@/components/offline/OfflineStatusBar";
 
@@ -24,6 +25,9 @@ export default function AppLayout() {
 
   // Sync unread notification count to store for badge display
   useUnreadBadge();
+
+  // Sync chat unread count to store for messages tab badge
+  useChatUnreadBadge();
 
   if (!isSessionRestored || isLoading) {
     return (
@@ -72,6 +76,7 @@ export default function AppLayout() {
         <Stack.Screen name="sos-dashboard" />
         <Stack.Screen name="sos-detail" />
         <Stack.Screen name="notifications" />
+        <Stack.Screen name="chat/[conversationId]" />
         <Stack.Screen
           name="annotate"
           options={{

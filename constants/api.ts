@@ -73,6 +73,12 @@ export const ENDPOINTS = {
   ROUTE_TODAY: "/route/today",
   ROUTE_OPTIMIZE: "/route/optimize",
 
+  // Chat / Messaging (M-12)
+  CHAT_CONVERSATIONS: "/chat/conversations",
+  CHAT_MESSAGES: (id: string) => `/chat/conversations/${id}/messages` as const,
+  CHAT_SEND: (id: string) => `/chat/conversations/${id}/send` as const,
+  CHAT_READ: (id: string) => `/chat/conversations/${id}/read` as const,
+
   // Sync
   DELTA_SYNC: "/sync/delta",
 

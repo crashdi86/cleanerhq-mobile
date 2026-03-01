@@ -747,3 +747,72 @@ export interface OptimizeRouteResponse {
   previous_total_km: number;
   optimized_total_km: number;
 }
+
+// ── Chat / Messaging Types (M-12) ──
+
+export type ConversationType = "direct" | "job";
+export type MessageVisibility = "private" | "public";
+
+export interface ConversationParticipant {
+  user_id: string;
+  participant_type: string;
+  name: string;
+  avatar_url: string | null;
+}
+
+export interface ConversationJob {
+  id: string;
+  job_number: string;
+  account: { name: string };
+}
+
+export interface Conversation {
+  id: string;
+  type: ConversationType;
+  title: string;
+  message_count: number;
+  last_message_preview: string;
+  last_message_at: string;
+  job_id: string | null;
+  job: ConversationJob | null;
+  unread_count: number;
+  participants: ConversationParticipant[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  content: string;
+  sequence_number: number;
+  sender_id: string;
+  sender_name: string;
+  sender_avatar_url: string | null;
+  visibility_mode: MessageVisibility;
+  created_at: string;
+}
+
+export interface MessagesPage {
+  messages: ChatMessage[];
+  has_more: boolean;
+  oldest_sequence: number;
+  newest_sequence: number;
+}
+
+export interface SendMessageRequest {
+  content: string;
+  visibility_mode: MessageVisibility;
+}
+
+export interface SendMessageResponse {
+  id: string;
+  content: string;
+  sequence_number: number;
+  sender_name: string;
+  sender_avatar_url: string | null;
+  created_at: string;
+}
+
+export interface MarkReadRequest {
+  last_read_sequence: number;
+}

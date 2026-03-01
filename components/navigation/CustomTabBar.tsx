@@ -13,6 +13,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { useAuthStore } from "@/store/auth-store";
 import { useNotificationStore } from "@/store/notification-store";
+import { useChatStore } from "@/store/chat-store";
 import Animated, {
   useAnimatedStyle,
   withTiming,
@@ -44,6 +45,7 @@ export function CustomTabBar({
   const insets = useSafeAreaInsets();
   const userRole = useAuthStore((s) => s.user?.role);
   const unreadCount = useNotificationStore((s) => s.unreadCount);
+  const chatUnreadCount = useChatStore((s) => s.totalUnreadCount);
 
   return (
     <BlurView
@@ -92,7 +94,13 @@ export function CustomTabBar({
               label={label}
               isFocused={isFocused}
               onPress={onPress}
-              badge={routeName === "more" ? unreadCount : 0}
+              badge={
+                routeName === "more"
+                  ? unreadCount
+                  : routeName === "messages"
+                    ? chatUnreadCount
+                    : 0
+              }
             />
           );
         })}
