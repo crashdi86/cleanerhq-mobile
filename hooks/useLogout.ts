@@ -7,6 +7,8 @@ import { useAuthStore } from "@/store/auth-store";
 import { queryClient } from "@/lib/api/query-client";
 import { cacheStorage } from "@/lib/offline";
 import { useSyncStore } from "@/store/sync-store";
+import { pushTokenStorage } from "@/lib/push/push-token-storage";
+import { useNotificationStore } from "@/store/notification-store";
 
 export function useLogout() {
   return useCallback(async () => {
@@ -28,6 +30,10 @@ export function useLogout() {
 
     // 5. Clear sync state
     useSyncStore.getState().reset();
+
+    // 5.5 Clear push notification token and state
+    await pushTokenStorage.clearToken();
+    useNotificationStore.getState().reset();
 
     // 6. Reset Zustand auth store
     useAuthStore.getState().logout();

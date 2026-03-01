@@ -12,19 +12,29 @@ import {
   faPlay,
   faCircleCheck,
   faFileInvoiceDollar,
+  faClock,
+  faClockRotateLeft,
 } from "@fortawesome/free-solid-svg-icons";
 import * as Haptics from "expo-haptics";
 import { useJobActions } from "@/hooks/useJobActions";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { CooldownTimer } from "@/components/job-detail/CooldownTimer";
 import { showToast } from "@/store/toast-store";
 import type { JobDetail } from "@/lib/api/types";
 
 interface BottomActionBarProps {
   job: JobDetail;
   onChecklistGatePress?: () => void;
+  onRunningLatePress?: () => void;
+  onNotificationHistoryPress?: () => void;
 }
 
-export function BottomActionBar({ job, onChecklistGatePress }: BottomActionBarProps) {
+export function BottomActionBar({
+  job,
+  onChecklistGatePress,
+  onRunningLatePress,
+  onNotificationHistoryPress,
+}: BottomActionBarProps) {
   const insets = useSafeAreaInsets();
   const {
     actionState,
@@ -32,10 +42,23 @@ export function BottomActionBar({ job, onChecklistGatePress }: BottomActionBarPr
     handleStartJob,
     handleCompleteJob,
     isLoading,
+    canSend,
+    cooldownUntil,
   } = useJobActions(job.id, job);
 
   const [showConfirm, setShowConfirm] = useState(false);
   const [elapsed, setElapsed] = useState("");
+  const [isCooldownActive, setIsCooldownActive] = useState(false);
+
+  // Check if cooldown is currently active
+  useEffect(() => {
+    if (cooldownUntil) {
+      const remaining = new Date(cooldownUntil).getTime() - Date.now();
+      setIsCooldownActive(remaining > 0);
+    } else {
+      setIsCooldownActive(false);
+    }
+  }, [cooldownUntil]);
 
   // Elapsed timer for IN_PROGRESS state
   useEffect(() => {
@@ -77,6 +100,14 @@ export function BottomActionBar({ job, onChecklistGatePress }: BottomActionBarPr
     showToast("info", "Invoice view coming soon");
   }, []);
 
+  const handleCooldownExpired = useCallback(() => {
+    setIsCooldownActive(false);
+  }, []);
+
+  // Show Running Late button for scheduled/in_progress
+  const showRunningLate =
+    job.status === "scheduled" || job.status === "in_progress";
+
   // HIDDEN state -- render nothing
   if (actionState.type === "HIDDEN") {
     return null;
@@ -91,25 +122,80 @@ export function BottomActionBar({ job, onChecklistGatePress }: BottomActionBarPr
           { paddingBottom: insets.bottom + 16 },
         ]}
       >
-        {/* ON_MY_WAY */}
-        {actionState.type === "ON_MY_WAY" && (
+        {/* Notification history icon */}
+        {(actionState.type === "ON_MY_WAY" ||
+          actionState.type === "START_JOB" ||
+          actionState.type === "IN_PROGRESS") && (
           <Pressable
-            style={({ pressed }) => [
-              componentStyles.button,
-              componentStyles.primaryButton,
-              pressed && componentStyles.buttonPressed,
-            ]}
-            onPress={onPressWithHaptic(handleOnMyWay)}
+            onPress={onNotificationHistoryPress}
+            className="absolute top-3 right-5"
+            hitSlop={8}
           >
             <FontAwesomeIcon
-              icon={faLocationArrow}
-              size={18}
-              color="#FFFFFF"
+              icon={faClockRotateLeft}
+              size={16}
+              color="#9CA3AF"
             />
-            <Text className="text-base font-bold text-white ml-2">
-              On My Way
-            </Text>
           </Pressable>
+        )}
+
+        {/* ON_MY_WAY */}
+        {actionState.type === "ON_MY_WAY" && (
+          <>
+            {isCooldownActive && cooldownUntil ? (
+              <View>
+                <Pressable
+                  style={[
+                    componentStyles.button,
+                    componentStyles.primaryButton,
+                    componentStyles.buttonDisabled,
+                  ]}
+                  disabled
+                >
+                  <FontAwesomeIcon
+                    icon={faLocationArrow}
+                    size={18}
+                    color="#FFFFFF"
+                  />
+                  <Text className="text-base font-bold text-white ml-2">
+                    On My Way
+                  </Text>
+                </Pressable>
+                <View className="mt-2">
+                  <CooldownTimer
+                    cooldownUntil={cooldownUntil}
+                    onExpired={handleCooldownExpired}
+                  />
+                </View>
+              </View>
+            ) : (
+              <Pressable
+                style={({ pressed }) => [
+                  componentStyles.button,
+                  componentStyles.primaryButton,
+                  pressed && componentStyles.buttonPressed,
+                  isLoading && componentStyles.buttonDisabled,
+                ]}
+                onPress={onPressWithHaptic(handleOnMyWay)}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <ActivityIndicator color="#FFFFFF" size="small" />
+                ) : (
+                  <>
+                    <FontAwesomeIcon
+                      icon={faLocationArrow}
+                      size={18}
+                      color="#FFFFFF"
+                    />
+                    <Text className="text-base font-bold text-white ml-2">
+                      On My Way
+                    </Text>
+                  </>
+                )}
+              </Pressable>
+            )}
+          </>
         )}
 
         {/* START_JOB */}
@@ -219,6 +305,33 @@ export function BottomActionBar({ job, onChecklistGatePress }: BottomActionBarPr
             </Text>
           </Pressable>
         )}
+
+        {/* Running Late button — shown for scheduled and in_progress */}
+        {showRunningLate && (
+          <Pressable
+            style={({ pressed }) => [
+              componentStyles.button,
+              componentStyles.runningLateButton,
+              pressed && componentStyles.buttonPressed,
+            ]}
+            onPress={() => {
+              void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              onRunningLatePress?.();
+            }}
+          >
+            <FontAwesomeIcon icon={faClock} size={16} color="#2A5B4F" />
+            <Text className="text-sm font-semibold ml-2" style={componentStyles.primaryText}>
+              Running Late
+            </Text>
+            {canSend && (
+              <View className="ml-2 bg-gray-100 px-2 py-0.5 rounded-full">
+                <Text className="text-xs text-text-secondary">
+                  {canSend.running_late_remaining_today}/3
+                </Text>
+              </View>
+            )}
+          </Pressable>
+        )}
       </View>
 
       {/* Confirm dialog for completing job */}
@@ -262,6 +375,14 @@ const componentStyles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderWidth: 2,
     borderColor: "#2A5B4F",
+  },
+  runningLateButton: {
+    height: 44,
+    borderRadius: 16,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "rgba(42,91,79,0.2)",
+    marginTop: 8,
   },
   buttonPressed: {
     transform: [{ scale: 0.97 }],

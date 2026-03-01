@@ -32,11 +32,20 @@ export const ERROR_MESSAGES: Record<string, string> = {
   INVOICE_NOT_FOUND: "This invoice could not be found.",
   PAYMENT_FAILED: "Payment failed. Please try again.",
 
-  // Notifications
+  // Notifications (M-08)
   NOTIFICATION_NOT_FOUND: "Notification not found.",
+  NOTIFICATION_COOLDOWN: "On My Way already sent. Please wait before sending again.",
+  NOTIFICATION_DAILY_LIMIT: "Daily notification limit reached for this job (3 per day).",
+  NOTIFICATIONS_DISABLED: "Client notifications are disabled for this workspace.",
+  NO_CONTACT_METHOD: "This client has no phone number or email on file.",
 
-  // SOS
-  SOS_COOLDOWN: "Please wait before sending another SOS alert.",
+  // Push Notifications (M-09)
+  DEVICE_REGISTRATION_FAILED: "Failed to register device for notifications.",
+  PUSH_PERMISSION_DENIED: "Notification permission denied. Enable in device settings.",
+
+  // SOS (M-08)
+  SOS_DISABLED: "SOS feature is disabled for this workspace.",
+  ALERT_ALREADY_RESOLVED: "This alert has already been resolved.",
 
   // Equipment
   EQUIPMENT_NOT_FOUND: "Equipment not found.",

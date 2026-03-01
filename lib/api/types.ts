@@ -440,3 +440,176 @@ export interface ProfileResponse {
     min_photos_for_completion: number;
   };
 }
+
+// ── Notification Types (M-08) ──
+
+export interface OnMyWayRequest {
+  latitude: number;
+  longitude: number;
+}
+
+export interface OnMyWayResponse {
+  eta_minutes: number;
+  channel: string;
+  notification_id: string;
+}
+
+export interface RunningLateRequest {
+  delay_minutes: number;
+  reason?: string;
+  latitude?: number;
+  longitude?: number;
+}
+
+export interface RunningLateResponse {
+  delay_minutes: number;
+  channel: string;
+  notification_id: string;
+  remaining_today: number;
+}
+
+export interface JobNotification {
+  id: string;
+  workspace_id: string;
+  job_id: string;
+  type: string;
+  category: "on_my_way" | "running_late";
+  message: string;
+  sender_user_id: string;
+  eta_minutes: number | null;
+  delay_minutes?: number;
+  reason?: string;
+  sent_at: string;
+  created_at: string;
+}
+
+export interface CanSendState {
+  on_my_way: boolean;
+  on_my_way_cooldown_until: string | null;
+  running_late: boolean;
+  running_late_remaining_today: number;
+}
+
+export interface JobNotificationsResponse {
+  notifications: JobNotification[];
+  can_send: CanSendState;
+}
+
+// ── SOS Types (M-08) ──
+
+export type SOSAlertStatus = "active" | "acknowledged" | "resolved";
+
+export interface SOSAlertRequest {
+  latitude: number;
+  longitude: number;
+  job_id?: string;
+}
+
+export interface SOSAlertResponse {
+  alert_id: string | null;
+  status: "active";
+  message: string;
+}
+
+export interface SOSAlert {
+  id: string;
+  triggered_by: { id: string; name: string };
+  job: { id: string; title: string } | null;
+  latitude: number;
+  longitude: number;
+  address: string | null;
+  status: SOSAlertStatus;
+  acknowledged_by: { id: string } | null;
+  acknowledged_at: string | null;
+  resolved_by: { id: string } | null;
+  resolved_at: string | null;
+  resolution_notes: string | null;
+  created_at: string;
+}
+
+export interface SOSAlertsResponse {
+  data: SOSAlert[];
+  counts: {
+    active: number;
+    acknowledged: number;
+    resolved: number;
+  };
+}
+
+export interface SOSAcknowledgeResponse {
+  alert_id: string;
+  status: "acknowledged";
+  acknowledged_by: { id: string };
+}
+
+export interface SOSResolveRequest {
+  resolution_notes: string;
+}
+
+export interface SOSResolveResponse {
+  alert_id: string;
+  status: "resolved";
+  resolved_by: { id: string };
+  resolution_notes: string;
+}
+
+// ── Push Notification Types (M-09) ──
+
+export type AppNotificationType =
+  | "job_update"
+  | "schedule_change"
+  | "chat_message"
+  | "sos_alert"
+  | "invoice"
+  | "time_tracking"
+  | "general";
+
+export interface DeviceRegisterRequest {
+  push_token: string;
+  platform: "ios" | "android";
+  app_version: string;
+  device_model: string;
+}
+
+export interface DeviceRegisterResponse {
+  device_id: string;
+}
+
+export interface AppNotification {
+  id: string;
+  type: AppNotificationType;
+  title: string;
+  body: string;
+  read: boolean;
+  created_at: string;
+  data: {
+    link_url?: string;
+    job_id?: string;
+    conversation_id?: string;
+    [key: string]: unknown;
+  };
+}
+
+export interface NotificationsResponse {
+  notifications: AppNotification[];
+  pagination: {
+    total: number;
+    limit: number;
+    offset: number;
+    hasMore: boolean;
+  };
+  unread_count: number;
+}
+
+export interface NotificationCountResponse {
+  unread_count: number;
+}
+
+export interface MarkReadResponse {
+  id: string;
+  read: boolean;
+}
+
+export interface MarkAllReadResponse {
+  updated_count: number;
+}

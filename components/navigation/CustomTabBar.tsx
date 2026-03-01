@@ -12,6 +12,7 @@ import {
   faEllipsis,
 } from "@fortawesome/free-solid-svg-icons";
 import { useAuthStore } from "@/store/auth-store";
+import { useNotificationStore } from "@/store/notification-store";
 import Animated, {
   useAnimatedStyle,
   withTiming,
@@ -42,6 +43,7 @@ export function CustomTabBar({
 }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const userRole = useAuthStore((s) => s.user?.role);
+  const unreadCount = useNotificationStore((s) => s.unreadCount);
 
   return (
     <BlurView
@@ -90,7 +92,7 @@ export function CustomTabBar({
               label={label}
               isFocused={isFocused}
               onPress={onPress}
-              badge={0}
+              badge={routeName === "more" ? unreadCount : 0}
             />
           );
         })}

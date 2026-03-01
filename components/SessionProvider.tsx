@@ -8,6 +8,10 @@ import { apiClient } from "@/lib/api/client";
 import { ENDPOINTS } from "@/constants/api";
 import { BiometricUtils } from "@/hooks/useBiometric";
 import { hydrateQueryCacheFromOffline } from "@/lib/offline/cache-hydrator";
+import {
+  processPendingDeepLink,
+  processLastNotificationResponse,
+} from "@/lib/push/deep-link-handler";
 import type { ProfileResponse } from "@/lib/api/types";
 
 export function SessionProvider({ children }: { children: React.ReactNode }) {
@@ -87,6 +91,10 @@ async function restoreSession(): Promise<void> {
           name: profile.workspace.name,
         }
       );
+
+      // Process any queued deep link from cold start push tap (M-09 S5)
+      processPendingDeepLink();
+      void processLastNotificationResponse();
     }
   } catch {
     // Any failure — start fresh

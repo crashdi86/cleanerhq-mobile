@@ -1,13 +1,14 @@
 import { useMemo, useState, useCallback } from "react";
 import * as Haptics from "expo-haptics";
 import { useStartJob, useCompleteJob } from "@/lib/api/hooks/useJobDetail";
+import { useOnMyWay, useJobNotifications } from "@/lib/api/hooks/useNotifications";
 import { ApiError } from "@/lib/api/client";
 import { getActionBarState, type ActionBarState } from "@/lib/job-actions";
 import { useClockStore } from "@/store/clock-store";
 import { showToast } from "@/store/toast-store";
 import { useLocation } from "@/hooks/useLocation";
 import { getErrorMessage } from "@/constants/error-messages";
-import type { JobDetail } from "@/lib/api/types";
+import type { JobDetail, CanSendState } from "@/lib/api/types";
 
 export interface UseJobActionsReturn {
   actionState: ActionBarState;
@@ -16,6 +17,12 @@ export interface UseJobActionsReturn {
   handleCompleteJob: () => Promise<void>;
   isLoading: boolean;
   error: string | null;
+  canSend: CanSendState | null;
+  cooldownUntil: string | null;
+  showRunningLateSheet: boolean;
+  setShowRunningLateSheet: (show: boolean) => void;
+  showNotificationHistory: boolean;
+  setShowNotificationHistory: (show: boolean) => void;
 }
 
 export function useJobActions(
@@ -27,7 +34,15 @@ export function useJobActions(
   const location = useLocation();
   const startJob = useStartJob();
   const completeJob = useCompleteJob();
+  const onMyWayMutation = useOnMyWay();
   const [error, setError] = useState<string | null>(null);
+  const [showRunningLateSheet, setShowRunningLateSheet] = useState(false);
+  const [showNotificationHistory, setShowNotificationHistory] = useState(false);
+
+  // Fetch notification can_send state
+  const { data: notificationsData } = useJobNotifications(jobId);
+  const canSend = notificationsData?.can_send ?? null;
+  const cooldownUntil = canSend?.on_my_way_cooldown_until ?? null;
 
   const actionState = useMemo<ActionBarState>(() => {
     if (!job) {
@@ -45,9 +60,55 @@ export function useJobActions(
 
   const handleOnMyWay = useCallback(async () => {
     setError(null);
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    showToast("success", "Your client has been notified");
-  }, []);
+
+    try {
+      const coords = await location.acquire();
+      if (!coords) {
+        showToast("error", "Unable to acquire location");
+        return;
+      }
+
+      const result = await onMyWayMutation.mutateAsync({
+        id: jobId,
+        latitude: coords.latitude,
+        longitude: coords.longitude,
+      });
+
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      showToast(
+        "success",
+        `Client notified — ETA ~${result.eta_minutes} min`
+      );
+    } catch (err) {
+      if (err instanceof ApiError) {
+        switch (err.code) {
+          case "NOTIFICATION_COOLDOWN":
+            showToast("warning", getErrorMessage("NOTIFICATION_COOLDOWN"));
+            break;
+          case "NOTIFICATIONS_DISABLED":
+            showToast("error", getErrorMessage("NOTIFICATIONS_DISABLED"));
+            break;
+          case "NO_CONTACT_METHOD":
+            showToast("error", getErrorMessage("NO_CONTACT_METHOD"));
+            break;
+          case "JOB_NOT_ASSIGNED":
+          case "INVALID_STATUS_TRANSITION":
+            showToast("error", getErrorMessage(err.code));
+            break;
+          default:
+            showToast(
+              "error",
+              getErrorMessage(err.code, "Failed to send notification")
+            );
+            break;
+        }
+        setError(err.message);
+      } else {
+        showToast("error", "Failed to send notification");
+        setError("Failed to send notification");
+      }
+    }
+  }, [jobId, location, onMyWayMutation]);
 
   const handleStartJob = useCallback(async () => {
     setError(null);
@@ -75,8 +136,6 @@ export function useJobActions(
             showToast("warning", "You must be at the job site");
             break;
           case "INVALID_STATUS_TRANSITION":
-            showToast("error", getErrorMessage(err.code));
-            break;
           case "JOB_NOT_ASSIGNED":
             showToast("error", getErrorMessage(err.code));
             break;
@@ -145,7 +204,10 @@ export function useJobActions(
   }, [jobId, location, completeJob]);
 
   const isLoading =
-    startJob.isPending || completeJob.isPending || location.isAcquiring;
+    startJob.isPending ||
+    completeJob.isPending ||
+    onMyWayMutation.isPending ||
+    location.isAcquiring;
 
   return {
     actionState,
@@ -154,5 +216,11 @@ export function useJobActions(
     handleCompleteJob,
     isLoading,
     error,
+    canSend,
+    cooldownUntil,
+    showRunningLateSheet,
+    setShowRunningLateSheet,
+    showNotificationHistory,
+    setShowNotificationHistory,
   };
 }

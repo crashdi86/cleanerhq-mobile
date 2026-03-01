@@ -29,6 +29,11 @@ export const ENDPOINTS = {
   // Jobs — notes
   JOB_NOTES: (id: string) => `/jobs/${id}/notes` as const,
 
+  // Jobs — notifications (M-08)
+  JOB_ON_MY_WAY: (id: string) => `/jobs/${id}/on-my-way` as const,
+  JOB_RUNNING_LATE: (id: string) => `/jobs/${id}/running-late` as const,
+  JOB_NOTIFICATIONS: (id: string) => `/jobs/${id}/notifications` as const,
+
   // Jobs — schedule & unassigned
   MY_SCHEDULE: "/jobs/my-schedule",
   JOBS_UNASSIGNED: "/jobs/unassigned",
@@ -48,6 +53,19 @@ export const ENDPOINTS = {
 
   // Dashboard
   DASHBOARD_SUMMARY: "/dashboard/summary",
+
+  // SOS (M-08)
+  SOS_ALERT: "/sos/alert",
+  SOS_ALERTS: "/sos/alerts",
+  SOS_ACKNOWLEDGE: (id: string) => `/sos/alert/${id}/acknowledge` as const,
+  SOS_RESOLVE: (id: string) => `/sos/alert/${id}/resolve` as const,
+
+  // Push Notifications & Notification Center (M-09)
+  DEVICE_REGISTER: "/devices/register",
+  NOTIFICATIONS: "/notifications",
+  NOTIFICATIONS_COUNT: "/notifications/count",
+  NOTIFICATION_READ: (id: string) => `/notifications/${id}/read` as const,
+  NOTIFICATIONS_READ_ALL: "/notifications/read-all",
 
   // Sync
   DELTA_SYNC: "/sync/delta",

@@ -15,6 +15,7 @@ import { useNetworkStore, setNetworkChangeCallback } from "@/store/network-store
 import { onNetworkChange } from "@/lib/offline/sync-manager";
 import { useSyncStore } from "@/store/sync-store";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { PushNotificationProvider } from "@/components/push/PushNotificationProvider";
 import { library } from "@fortawesome/fontawesome-svg-core";
 import {
   faHouse,
@@ -81,6 +82,10 @@ import {
   faCloudArrowDown,
   faRotate,
   faWifi,
+  faCloudBolt,
+  // M-09 notification icons
+  faCheckDouble,
+  faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import {
   faBell as faBellRegular,
@@ -158,6 +163,10 @@ library.add(
   faCloudArrowDown,
   faRotate,
   faWifi,
+  faCloudBolt,
+  // M-09 notification icons
+  faCheckDouble,
+  faXmark,
   // Regular variants
   faBellRegular,
   faCalendarRegular,
@@ -194,6 +203,7 @@ export default function RootLayout() {
       <QueryClientProvider client={queryClient}>
         <ErrorBoundary>
           <SessionProvider>
+            <PushNotificationProvider />
             <Slot />
           </SessionProvider>
           <ToastProvider />

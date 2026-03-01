@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback } from "react";
+import React, { useMemo, useCallback, useState } from "react";
 import { RefreshControl } from "react-native";
 import { ScrollView, View } from "@/tw";
 import { useRouter } from "expo-router";
@@ -7,14 +7,14 @@ import { GreetingHeader } from "./GreetingHeader";
 import { NextJobCard } from "./NextJobCard";
 import { QuickActionChips } from "./QuickActionChips";
 import { TodayJobTimeline } from "./TodayJobTimeline";
+import { HorizontalDateScroller } from "./HorizontalDateScroller";
 import { EmptyState } from "./EmptyState";
 import type { ScheduleJob } from "@/lib/api/types";
 
-function getTodayDateString(): string {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
+function formatDateString(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 }
 
@@ -29,8 +29,10 @@ function findNextJob(jobs: ScheduleJob[]): ScheduleJob | undefined {
 
 export function StaffDashboard() {
   const router = useRouter();
-  const todayDate = useMemo(() => getTodayDateString(), []);
-  const { data, isLoading, refetch, isRefetching } = useMySchedule(todayDate);
+  const [selectedDate, setSelectedDate] = useState(() => new Date());
+
+  const dateString = useMemo(() => formatDateString(selectedDate), [selectedDate]);
+  const { data, isLoading, refetch, isRefetching } = useMySchedule(dateString);
 
   const jobs = data?.jobs ?? [];
   const nextJob = useMemo(() => findNextJob(jobs), [jobs]);
@@ -65,6 +67,10 @@ export function StaffDashboard() {
     []
   );
 
+  const handleDateChange = useCallback((date: Date) => {
+    setSelectedDate(date);
+  }, []);
+
   const handleRefresh = useCallback(() => {
     refetch();
   }, [refetch]);
@@ -96,12 +102,20 @@ export function StaffDashboard() {
         ) : null}
       </GreetingHeader>
 
+      {/* Date scroller */}
+      <View className={nextJob ? "pt-16 mt-1" : "pt-3"}>
+        <HorizontalDateScroller
+          selectedDate={selectedDate}
+          onDateChange={handleDateChange}
+        />
+      </View>
+
       {/* Quick action chips */}
-      <View className={nextJob ? "pt-16 mt-2" : "pt-4"}>
+      <View className="pt-3">
         <QuickActionChips onChipPress={handleChipPress} />
       </View>
 
-      {/* Today's job timeline or empty state */}
+      {/* Job timeline or empty state */}
       {hasJobs ? (
         <TodayJobTimeline
           jobs={timelineJobs}

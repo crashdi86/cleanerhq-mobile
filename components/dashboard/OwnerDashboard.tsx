@@ -8,6 +8,7 @@ import { KPIGrid } from "@/components/dashboard/KPIGrid";
 import { QuickActionsOwner } from "@/components/dashboard/QuickActionsOwner";
 import { TodayGlance } from "@/components/dashboard/TodayGlance";
 import { SystemAlerts } from "@/components/dashboard/SystemAlerts";
+import { SOSAlertBanner } from "@/components/dashboard/SOSAlertBanner";
 
 export function OwnerDashboard() {
   const {
@@ -51,6 +52,9 @@ export function OwnerDashboard() {
       >
         {/* Greeting Header */}
         <GreetingHeader variant="owner" />
+
+        {/* SOS Alert Banner — appears above KPIs when active */}
+        <SOSAlertBanner />
 
         {/* KPI Grid */}
         <KPIGrid data={data} isLoading={isLoading} />

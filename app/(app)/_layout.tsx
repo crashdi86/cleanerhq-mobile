@@ -4,6 +4,7 @@ import { useAuthStore } from "@/store/auth-store";
 import { useClockStatusSync } from "@/hooks/useClockStatusSync";
 import { useUploadProcessor } from "@/hooks/useUploadProcessor";
 import { useMutationQueueProcessor } from "@/hooks/useMutationQueueProcessor";
+import { useUnreadBadge } from "@/hooks/useUnreadBadge";
 import { ClockStatusIndicator } from "@/components/navigation/ClockStatusIndicator";
 import { OfflineStatusBar } from "@/components/offline/OfflineStatusBar";
 
@@ -20,6 +21,9 @@ export default function AppLayout() {
 
   // Auto-process offline mutation queue in background
   useMutationQueueProcessor();
+
+  // Sync unread notification count to store for badge display
+  useUnreadBadge();
 
   if (!isSessionRestored || isLoading) {
     return (
@@ -62,6 +66,9 @@ export default function AppLayout() {
         />
         <Stack.Screen name="time-history" />
         <Stack.Screen name="accounts/[id]" />
+        <Stack.Screen name="sos-dashboard" />
+        <Stack.Screen name="sos-detail" />
+        <Stack.Screen name="notifications" />
         <Stack.Screen
           name="annotate"
           options={{

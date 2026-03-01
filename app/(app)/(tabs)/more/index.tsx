@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import {
   Alert,
   Pressable,
@@ -8,20 +8,33 @@ import {
 import { View, Text } from "@/tw";
 import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
 import { useAuthStore } from "@/store/auth-store";
 import { useLogout } from "@/hooks/useLogout";
 import { useBiometric } from "@/hooks/useBiometric";
 import { PendingSyncCounter } from "@/components/offline/PendingSyncCounter";
 import { useSyncStore } from "@/store/sync-store";
 import { formatCacheTime } from "@/lib/offline/format-cache-time";
+import { useSOSAlerts } from "@/lib/api/hooks/useSOS";
+import { SOSDisclaimerModal } from "@/components/sos/SOSDisclaimerModal";
 
 export default function MoreScreen() {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const workspace = useAuthStore((s) => s.workspace);
   const logout = useLogout();
   const biometric = useBiometric();
   const lastSyncedAt = useSyncStore((s) => s.lastSyncedAt);
+  const [showDisclaimer, setShowDisclaimer] = useState(false);
+
+  const isOwner = user?.role === "OWNER";
+
+  // Fetch SOS alert counts for owner badge (only when owner)
+  const { data: sosData } = useSOSAlerts(
+    isOwner ? undefined : { status: "active", limit: 0 }
+  );
+  const activeAlertCount = isOwner ? (sosData?.counts?.active ?? 0) : 0;
 
   const handleBiometricToggle = useCallback(async (value: boolean) => {
     if (value) {
@@ -117,7 +130,7 @@ export default function MoreScreen() {
           Settings
         </Text>
 
-        {/* Biometric toggle placeholder */}
+        {/* Biometric toggle */}
         <View className="flex-row items-center justify-between py-4">
           <View className="flex-row items-center gap-3">
             <View
@@ -148,6 +161,81 @@ export default function MoreScreen() {
             />
           )}
         </View>
+
+        <View className="h-px bg-border" />
+
+        {/* SOS Alerts — Owner only */}
+        {isOwner && (
+          <>
+            <Pressable
+              onPress={() => router.push("/(app)/sos-dashboard")}
+              className="flex-row items-center justify-between py-4"
+            >
+              <View className="flex-row items-center gap-3">
+                <View
+                  className="items-center justify-center rounded-xl"
+                  style={[styles.settingIcon, styles.sosIcon]}
+                >
+                  <FontAwesomeIcon
+                    icon="shield-halved"
+                    size={18}
+                    color="#EF4444"
+                  />
+                </View>
+                <View>
+                  <Text className="text-base font-medium text-text-primary">
+                    SOS Alerts
+                  </Text>
+                  <Text className="text-xs text-text-secondary mt-0.5">
+                    Manage crew safety alerts
+                  </Text>
+                </View>
+              </View>
+              <View className="flex-row items-center gap-2">
+                {activeAlertCount > 0 && (
+                  <View style={styles.alertBadge}>
+                    <Text style={styles.alertBadgeText}>
+                      {activeAlertCount}
+                    </Text>
+                  </View>
+                )}
+                <FontAwesomeIcon
+                  icon="chevron-right"
+                  size={14}
+                  color="#9CA3AF"
+                />
+              </View>
+            </Pressable>
+            <View className="h-px bg-border" />
+          </>
+        )}
+
+        {/* SOS Disclaimer — All users */}
+        <Pressable
+          onPress={() => setShowDisclaimer(true)}
+          className="flex-row items-center justify-between py-4"
+        >
+          <View className="flex-row items-center gap-3">
+            <View
+              className="items-center justify-center rounded-xl"
+              style={styles.settingIcon}
+            >
+              <FontAwesomeIcon
+                icon="shield-halved"
+                size={18}
+                color="#2A5B4F"
+              />
+            </View>
+            <Text className="text-base font-medium text-text-primary">
+              SOS Disclaimer
+            </Text>
+          </View>
+          <FontAwesomeIcon
+            icon="chevron-right"
+            size={14}
+            color="#9CA3AF"
+          />
+        </Pressable>
 
         <View className="h-px bg-border" />
 
@@ -221,6 +309,12 @@ export default function MoreScreen() {
           <Text style={styles.logoutText}>Sign Out</Text>
         </Pressable>
       </View>
+
+      {/* SOS Disclaimer Modal (read-only from settings) */}
+      <SOSDisclaimerModal
+        visible={showDisclaimer}
+        onAccept={() => setShowDisclaimer(false)}
+      />
     </View>
   );
 }
@@ -234,6 +328,23 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     backgroundColor: "rgba(42,91,79,0.08)",
+  },
+  sosIcon: {
+    backgroundColor: "rgba(239,68,68,0.08)",
+  },
+  alertBadge: {
+    minWidth: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: "#EF4444",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 6,
+  },
+  alertBadgeText: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#FFFFFF",
   },
   logoutButton: {
     flexDirection: "row",
